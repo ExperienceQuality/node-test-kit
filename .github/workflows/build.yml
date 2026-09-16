@@ -29,7 +29,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Create package artifact
-        run: npm pack --pack-destination dist
+        run: |
+          mkdir -p dist
+          npm pack --pack-destination dist
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
         with:
