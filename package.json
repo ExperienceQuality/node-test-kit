@@ -1,0 +1,27 @@
+{
+  "name": "node-test-kit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A platform-owned Vitest foundation for backend functional E2E tests.",
+  "exports": {
+    ".": "./src/index.js",
+    "./vitest": "./src/vitest/test.js",
+    "./vitest/config": "./src/vitest/config.js",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run test/unit",
+    "test:integration": "vitest run test/integration",
+    "test:e2e": "vitest run test/e2e",
+    "demo": "vitest run --config demo/vitest.config.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "vitest": "^4.0.0"
+  }
+}
