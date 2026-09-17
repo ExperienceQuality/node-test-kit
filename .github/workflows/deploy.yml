@@ -1,0 +1,24 @@
+# hub-stage: deploy
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-node-test-kit
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deployment target pending
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: production
+    steps:
+      - name: Explain deployment status
+        run: |
+          echo 'node-test-kit is an npm library and has no runtime deployment target configured.'
+          echo 'Use the Publish workflow to release a version to npm once package publication is enabled.'

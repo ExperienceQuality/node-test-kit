@@ -1,0 +1,49 @@
+# hub-stage: publish
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: Publish node-test-kit to npm
+        required: true
+        type: boolean
+        default: false
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-npm
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish npm package
+    if: github.event_name == 'push' || inputs.confirm == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run release validation
+        run: npm test && npm run demo
+      - name: Refuse private package publication
+        run: |
+          if node -e "process.exit(require('./package.json').private === true ? 0 : 1)"; then
+            echo 'package.json is private; set private to false before publishing.' >&2
+            exit 1
+          fi
+      - name: Publish package with provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public

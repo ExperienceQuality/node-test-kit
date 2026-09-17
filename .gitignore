@@ -1,0 +1,5 @@
+node_modules/
+coverage/
+.vitest/
+.node-test-kit/
+dist/
