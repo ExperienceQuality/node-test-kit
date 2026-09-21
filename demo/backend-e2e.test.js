@@ -2,23 +2,24 @@ import { expect } from 'vitest';
 import { test } from 'node-test-kit/vitest';
 
 test('consumer drives a dummy backend through the kit facade', async ({ kit }) => {
-  const health = await fetch(`${kit.stub.baseUrl}/health`);
-  const body = await health.json();
+  const health = await fetch(`${kit.stub.baseUrl}/api/pactum/health`);
+  const body = await health.text();
 
   expect(health.status).toBe(200);
-  expect(body).toEqual({ status: 'ok' });
+  expect(body).toBe('OK');
   expect(kit.run.id).toBeTypeOf('string');
   expect(kit.api).toBeDefined();
 
   const payment = await kit.stub.add({
-    method: 'POST',
-    path: '/payments',
-    body: { productId: 'product-1' },
+    request: {
+      method: 'POST',
+      path: '/payments',
+      body: { productId: 'product-1' }
+    },
     response: {
       status: 201,
       body: { paymentId: 'pay-123', status: 'approved' }
-    },
-    times: 1
+    }
   });
   expect(payment.id).toBeTypeOf('string');
 
@@ -33,4 +34,5 @@ test('consumer drives a dummy backend through the kit facade', async ({ kit }) =
     paymentId: 'pay-123',
     status: 'created'
   });
+  await kit.stub.verify(payment.id, { exercised: true, callCount: 1 });
 });

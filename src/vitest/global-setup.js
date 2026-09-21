@@ -1,9 +1,9 @@
-import { startStubServer } from '../lifecycle/stub-server.js';
 import { startBackend } from '../lifecycle/backend-process.js';
+import { startPactumServer } from '../lifecycle/pactum-server.js';
 
 export default async function globalSetup(project) {
   const options = project.config.nodeTestKit ?? {};
-  const stubServer = await startStubServer(options.mock);
+  const mockServer = await startPactumServer(options.mock);
   let backend = null;
   try {
     backend = options.application?.command
@@ -11,21 +11,31 @@ export default async function globalSetup(project) {
         ...options.application,
         env: {
           ...options.application.env,
-          NODE_TEST_KIT_STUB_URL: stubServer.url,
-          PAYMENTS_URL: `${stubServer.url}/payments`
+          NODE_TEST_KIT_STUB_URL: mockServer.url
         }
       })
       : null;
   } catch (error) {
-    await stubServer.stop();
+    await mockServer.stop();
     throw error;
   }
 
-  project.provide('stubUrl', stubServer.url);
-  project.provide('backendUrl', backend?.url ?? options.application?.url ?? null);
+  project.provide('nodeTestKit', {
+    mock: {
+      baseUrl: mockServer.url,
+      host: mockServer.host,
+      port: mockServer.port,
+      managementUrl: mockServer.managementUrl,
+      namespaceHeader: mockServer.namespaceHeader
+    },
+    backendUrl: backend?.url ?? options.application?.url ?? null
+  });
 
   return async function globalTeardown() {
-    await backend?.stop();
-    await stubServer.stop();
+    try {
+      await backend?.stop();
+    } finally {
+      await mockServer.stop();
+    }
   };
 }

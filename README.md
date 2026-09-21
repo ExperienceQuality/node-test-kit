@@ -37,9 +37,10 @@ test('uses the platform-owned kit fixture', async ({ kit }) => {
 });
 ```
 
-The platform global setup starts one stub server for the Vitest run and
-provides its URL to isolated workers. The `kit` fixture is created per test
-and clears its stub namespace during teardown.
+The platform global setup starts one PactumJS mock server for the Vitest run
+and provides serializable server metadata to isolated workers. The `kit`
+fixture is created per test and removes only its owned interactions during
+teardown.
 
 The demo adds a payment interaction at runtime, starts `demo/dummy-api.js`,
 and verifies the complete request chain:
@@ -49,6 +50,52 @@ test -> dummy backend POST /orders
      -> platform stub POST /payments
      -> dummy backend returns paymentId
 ```
+
+## Runtime mock fixture
+
+`kit.stub` controls the shared PactumJS server from the test worker:
+
+```js
+const interaction = await kit.stub.add({
+  request: {
+    method: 'GET',
+    path: '/inventory/{id}',
+    pathParams: { id: 'item-1' }
+  },
+  response: {
+    status: 200,
+    body: { id: 'item-1', inStock: true }
+  }
+});
+
+await kit.stub.verify(interaction.id, { exercised: true, callCount: 1 });
+await kit.stub.remove(interaction.id);
+```
+
+Available operations: `add`, `get`, `verify`, `remove`, and `clear`.
+Interactions use PactumJS request/response syntax. Fixture cleanup removes
+only interactions created by that test. Do not call PactumJS global
+`clearInteractions()` from consumer tests.
+
+The fixture adds reserved header `x-node-test-kit-namespace` to every
+interaction. The application under test must forward this header to mocked
+downstream requests for parallel test isolation. Global setup provides:
+
+```js
+{
+  mock: {
+    baseUrl,
+    host,
+    port,
+    managementUrl,
+    namespaceHeader
+  },
+  backendUrl
+}
+```
+
+`NODE_TEST_KIT_STUB_URL` is passed to an application started by the kit.
+PactumJS mock health endpoint is `${baseUrl}/api/pactum/health`.
 
 Run it with:
 
