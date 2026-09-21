@@ -42,6 +42,32 @@ and provides serializable server metadata to isolated workers. The `kit`
 fixture is created per test and removes only its owned interactions during
 teardown.
 
+## Kit fixture
+
+Every test using `node-test-kit/vitest` receives one isolated `kit` fixture:
+
+| Member | Purpose |
+| --- | --- |
+| `kit.api` | HTTP client for the application under test. Adds the test namespace header. |
+| `kit.stub` | Runtime PactumJS interaction control. Owns interaction cleanup. |
+| `kit.run` | Test ID, worker ID, backend URL, and mock metadata. |
+
+The default mock server binds to loopback on an available port. Configure a
+fixed port only when the test process owns that port:
+
+```ts
+export default defineConfig({
+  mock: {
+    host: '127.0.0.1',
+    port: 9393
+  },
+  application: {
+    command: 'node demo/dummy-api.js',
+    url: 'http://127.0.0.1:4000/health'
+  }
+});
+```
+
 The demo adds a payment interaction at runtime, starts `demo/dummy-api.js`,
 and verifies the complete request chain:
 
@@ -77,9 +103,53 @@ Interactions use PactumJS request/response syntax. Fixture cleanup removes
 only interactions created by that test. Do not call PactumJS global
 `clearInteractions()` from consumer tests.
 
+Use `verify` when a downstream call is part of the behavior contract:
+
+```js
+const payment = await kit.stub.add({
+  request: {
+    method: 'POST',
+    path: '/payments',
+    body: { productId: 'product-1' }
+  },
+  response: {
+    status: 201,
+    body: { paymentId: 'pay-123' }
+  }
+});
+
+const response = await kit.api.post('/orders', {
+  data: { productId: 'product-1' }
+});
+
+expect(response.status).toBe(201);
+await kit.stub.verify(payment.id, { exercised: true, callCount: 1 });
+```
+
+`add` returns an interaction ID. `get` exposes PactumJS call metadata;
+`verify` can assert `exercised` and exact `callCount`. `remove` deletes one
+owned interaction. `clear` removes all interactions owned by the current
+test. Fixture teardown calls `clear` automatically, including after a test
+failure.
+
 The fixture adds reserved header `x-node-test-kit-namespace` to every
 interaction. The application under test must forward this header to mocked
-downstream requests for parallel test isolation. Global setup provides:
+downstream requests for parallel test isolation. Example application
+forwarding:
+
+```js
+const namespace = request.headers['x-node-test-kit-namespace'] ?? '';
+await fetch(`${process.env.NODE_TEST_KIT_STUB_URL}/payments`, {
+  method: 'POST',
+  headers: {
+    'content-type': 'application/json',
+    'x-node-test-kit-namespace': namespace
+  },
+  body: JSON.stringify(input)
+});
+```
+
+Global setup provides:
 
 ```js
 {
