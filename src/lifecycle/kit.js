@@ -7,7 +7,7 @@ export function createKit(run) {
     headers: { 'x-node-test-kit-namespace': run.id }
   });
 
-  const stub = createStubClient({ baseUrl: run.stubUrl, namespace: run.id });
+  const stub = createStubClient({ ...run.mock, namespace: run.id });
 
   return Object.freeze({ api, stub, run });
 }

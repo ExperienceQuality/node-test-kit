@@ -12,7 +12,12 @@ describe('project structure', () => {
   });
 
   it('creates an immutable facade with api, stub, and run members', () => {
-    const run = createRunContext({ id: 'orders-test' });
+    const run = createRunContext({ id: 'orders-test' }, {
+      mock: {
+        baseUrl: 'http://127.0.0.1:9393',
+        namespaceHeader: 'x-node-test-kit-namespace'
+      }
+    });
     const kit = createKit(run);
 
     expect(Object.keys(kit)).toEqual(['api', 'stub', 'run']);

@@ -12,7 +12,8 @@ const server = createServer(async (request, response) => {
     for await (const chunk of request) body += chunk;
     const input = JSON.parse(body || '{}');
 
-    const payment = await fetch(process.env.PAYMENTS_URL, {
+    const paymentBaseUrl = process.env.NODE_TEST_KIT_STUB_URL ?? process.env.PAYMENTS_URL?.replace(/\/payments$/, '');
+    const payment = await fetch(`${paymentBaseUrl}/payments`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
