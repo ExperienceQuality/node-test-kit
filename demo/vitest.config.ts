@@ -1,4 +1,5 @@
-import { defineConfig } from 'node-test-kit/vitest/config';
+// The demo runs from this repository before node-test-kit is installed as a package.
+import { defineConfig } from '../src/vitest/config.js';
 
 export default defineConfig({
   test: {
