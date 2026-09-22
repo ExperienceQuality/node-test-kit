@@ -3,3 +3,5 @@ coverage/
 .vitest/
 .node-test-kit/
 dist/
+*.tsbuildinfo
+artifacts/
