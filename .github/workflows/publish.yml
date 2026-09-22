@@ -36,14 +36,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run release validation
-        run: npm test && npm run demo
+        run: npm run check && npm test && npm run demo && npm run verify:packages
       - name: Refuse private package publication
         run: |
-          if node -e "process.exit(require('./package.json').private === true ? 0 : 1)"; then
-            echo 'package.json is private; set private to false before publishing.' >&2
+          if node -e "process.exit(require('./packages/node-test-kit/package.json').private === true ? 0 : 1)"; then
+            echo 'packages/node-test-kit/package.json is private; set private to false before publishing.' >&2
             exit 1
           fi
       - name: Publish package with provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --provenance --access public
+        run: npm publish --workspace node-test-kit --provenance --access public

@@ -2,14 +2,16 @@
 
 Vitest-based foundation for backend functional and API E2E testing.
 
-## POC layout
+## Monorepo layout
 
-- `src/` contains the package implementation.
-- `src/vitest/` contains the platform-owned Vitest adapter and config helper.
-- `test/unit/` covers pure package behavior.
-- `test/integration/` covers local process and HTTP boundaries.
-- `test/e2e/` covers consumer-style backend workflows.
-- `test/support/` contains deterministic test-only helpers.
+- `packages/api-client/` owns the backend HTTP client.
+- `packages/stub/` owns the PactumJS server and runtime interaction client.
+- `packages/core/` composes lifecycle, run-context, API, and stub behavior.
+- `packages/node-test-kit/` owns the stable public package and Vitest adapter.
+- `examples/backend-e2e/` exercises the packed consumer contract.
+
+Every workspace keeps implementation in `src/` and tests in `test/`. The root
+package is private and contains only npm-workspace orchestration.
 
 The intended consumer setup is a small `vitest.config.ts` that imports
 `defineConfig` from `node-test-kit/vitest/config`, while test files import the
@@ -62,13 +64,14 @@ export default defineConfig({
     port: 9393
   },
   application: {
-    command: 'node --experimental-strip-types demo/dummy-api.ts',
+    command: 'node --experimental-strip-types src/dummy-api.ts',
     url: 'http://127.0.0.1:4000/health'
   }
 });
 ```
 
-The demo adds a payment interaction at runtime, starts `demo/dummy-api.ts`,
+The demo adds a payment interaction at runtime, starts
+`examples/backend-e2e/src/dummy-api.ts`,
 and verifies the complete request chain:
 
 ```text
@@ -175,7 +178,14 @@ npm run demo
 
 ## TypeScript development
 
-The package source, tests, and demo are TypeScript. Type-check with `npm run
-check`; build JavaScript and declaration files into `dist/` with `npm run
-build`. Published consumers use the compiled package exports, while Vitest
-resolves the TypeScript source directly during local development.
+All package source, tests, and the demo are TypeScript. Install once from the
+repository root, then use `npm run check`, `npm test`, `npm run demo`, and
+`npm run build`. Compiled package output is written to each package's `dist/`
+directory; consumers continue to use only the `node-test-kit` export map.
+
+`npm run verify:structure` enforces the flat workspace layout and dependency
+boundaries. `npm run verify:packages` builds and packs all four library
+workspaces, installs their archives together in a fresh temporary consumer,
+type-checks that consumer with NodeNext resolution, and runs the legacy public
+imports under Vitest. The packages remain private; the generated archives are
+an integration artifact, not a publication action.

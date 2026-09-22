@@ -1,0 +1,23 @@
+{
+  "name": "@xq/node-test-kit-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "check": "tsc -p tsconfig.test.json --noEmit",
+    "test": "vitest run"
+  },
+  "engines": { "node": ">=24" },
+  "dependencies": {
+    "@xq/node-test-kit-api-client": "0.1.0",
+    "@xq/node-test-kit-stub": "0.1.0"
+  },
+  "files": ["dist", "package.json"]
+}
