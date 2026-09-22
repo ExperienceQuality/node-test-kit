@@ -1,8 +1,17 @@
 import { expect as vitestExpect, inject, test as vitestTest } from 'vitest';
 import { createKit } from '../lifecycle/kit.js';
 import { createRunContext } from '../lifecycle/run-context.js';
+import type { Kit } from '../lifecycle/kit.js';
 
-export const test = vitestTest.extend({
+declare module 'vitest' {
+  interface ProvidedContext {
+    nodeTestKit: { mock: { baseUrl: string; host: string; port: number; managementUrl: string; namespaceHeader: string }; backendUrl: string | null };
+  }
+}
+
+interface NodeTestKitFixtures { kit: Kit }
+
+export const test = vitestTest.extend<NodeTestKitFixtures>({
   kit: async ({ task }, use) => {
     const run = createRunContext(task, inject('nodeTestKit'));
     const kit = createKit(run);

@@ -1,7 +1,17 @@
 import { defineConfig as defineVitestConfig } from 'vitest/config';
+import type { UserConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
+import type { BackendOptions } from '../lifecycle/backend-process.js';
+import type { PactumServerOptions } from '../lifecycle/pactum-server.js';
 
-const globalSetup = fileURLToPath(new URL('./global-setup.js', import.meta.url));
+export interface KitOptions {
+  application?: BackendOptions;
+  mock?: PactumServerOptions;
+}
+
+export type NodeTestKitConfig = UserConfig & KitOptions;
+
+const globalSetup = fileURLToPath(new URL(import.meta.url.endsWith('.ts') ? './global-setup.ts' : './global-setup.js', import.meta.url));
 
 const defaultTest = {
   include: ['test/**/*.test.{js,mjs,ts,mts}'],
@@ -12,7 +22,7 @@ const defaultTest = {
   reporters: ['default']
 };
 
-export function defineConfig(options = {}) {
+export function defineConfig(options: NodeTestKitConfig = {}): UserConfig {
   const { test = {}, ...kitOptions } = options;
   const userGlobalSetup = test.globalSetup
     ? Array.isArray(test.globalSetup) ? test.globalSetup : [test.globalSetup]
@@ -25,5 +35,5 @@ export function defineConfig(options = {}) {
       globalSetup: [globalSetup, ...userGlobalSetup],
       nodeTestKit: kitOptions
     }
-  });
+  } as unknown as UserConfig);
 }

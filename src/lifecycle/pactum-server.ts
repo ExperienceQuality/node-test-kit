@@ -8,11 +8,27 @@ const DEFAULT_ATTEMPTS = 5;
 
 export const NAMESPACE_HEADER = 'x-node-test-kit-namespace';
 
-export async function startPactumServer(options = {}) {
+export interface PactumServerOptions {
+  host?: string;
+  port?: number;
+  attempts?: number;
+  healthTimeout?: number;
+}
+
+export interface PactumServer {
+  readonly host: string;
+  readonly port: number;
+  readonly url: string;
+  readonly managementUrl: string;
+  readonly namespaceHeader: string;
+  stop(): Promise<void>;
+}
+
+export async function startPactumServer(options: PactumServerOptions = {}): Promise<PactumServer> {
   const host = options.host ?? DEFAULT_HOST;
   const configuredPort = options.port ?? DEFAULT_PORT;
   const attempts = configuredPort === 0 ? options.attempts ?? DEFAULT_ATTEMPTS : 1;
-  let lastError;
+  let lastError: unknown;
 
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     const port = configuredPort === 0 ? await reservePort(host) : configuredPort;
@@ -43,26 +59,26 @@ export async function startPactumServer(options = {}) {
     }
   }
 
-  throw new Error(`node-test-kit: Pactum mock server did not start: ${lastError?.message ?? 'unknown error'}`);
+  throw new Error(`node-test-kit: Pactum mock server did not start: ${lastError instanceof Error ? lastError.message : 'unknown error'}`);
 }
 
-async function reservePort(host) {
+async function reservePort(host: string): Promise<number> {
   const server = createServer();
-  await new Promise((resolve, reject) => {
+  await new Promise<void>((resolve, reject) => {
     server.once('error', reject);
-    server.listen(DEFAULT_PORT, host, resolve);
+    server.listen(DEFAULT_PORT, host, () => resolve());
   });
 
   const address = server.address();
   const port = typeof address === 'object' && address ? address.port : null;
-  await new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+  await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
   if (!port) throw new Error(`could not reserve loopback port on ${host}`);
   return port;
 }
 
-async function waitForHealth(baseUrl, timeout) {
+async function waitForHealth(baseUrl: string, timeout: number): Promise<void> {
   const deadline = Date.now() + timeout;
-  let lastError;
+  let lastError: unknown;
   while (Date.now() < deadline) {
     try {
       const response = await fetch(`${baseUrl}/api/pactum/health`);
@@ -73,5 +89,5 @@ async function waitForHealth(baseUrl, timeout) {
     }
     await new Promise((resolve) => setTimeout(resolve, 25));
   }
-  throw new Error(`health check timed out: ${lastError?.message ?? baseUrl}`);
+  throw new Error(`health check timed out: ${lastError instanceof Error ? lastError.message : baseUrl}`);
 }

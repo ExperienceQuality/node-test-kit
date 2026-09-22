@@ -42,7 +42,7 @@ and provides serializable server metadata to isolated workers. The `kit`
 fixture is created per test and removes only its owned interactions during
 teardown.
 
-The demo adds a payment interaction at runtime, starts `demo/dummy-api.js`,
+The demo adds a payment interaction at runtime, starts `demo/dummy-api.ts`,
 and verifies the complete request chain:
 
 ```text
@@ -102,3 +102,10 @@ Run it with:
 ```bash
 npm run demo
 ```
+
+## TypeScript development
+
+The package source, tests, and demo are TypeScript. Type-check with `npm run
+check`; build JavaScript and declaration files into `dist/` with `npm run
+build`. Published consumers use the compiled package exports, while Vitest
+resolves the TypeScript source directly during local development.
