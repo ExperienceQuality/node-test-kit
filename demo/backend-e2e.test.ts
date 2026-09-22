@@ -1,5 +1,6 @@
 import { expect } from 'vitest';
-import { test } from 'node-test-kit/vitest';
+// Exercise the same source adapter used by the package while running in-repo.
+import { test } from '../src/vitest/test.js';
 
 test('consumer drives a dummy backend through the kit facade', async ({ kit }) => {
   const health = await fetch(`${kit.stub.baseUrl}/api/pactum/health`);

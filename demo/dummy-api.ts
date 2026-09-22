@@ -13,11 +13,12 @@ const server = createServer(async (request, response) => {
     const input = JSON.parse(body || '{}');
 
     const paymentBaseUrl = process.env.NODE_TEST_KIT_STUB_URL ?? process.env.PAYMENTS_URL?.replace(/\/payments$/, '');
+    const namespace = request.headers['x-node-test-kit-namespace'];
     const payment = await fetch(`${paymentBaseUrl}/payments`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        'x-node-test-kit-namespace': request.headers['x-node-test-kit-namespace'] ?? ''
+        'x-node-test-kit-namespace': Array.isArray(namespace) ? namespace[0] ?? '' : namespace ?? ''
       },
       body: JSON.stringify({ productId: input.productId })
     });

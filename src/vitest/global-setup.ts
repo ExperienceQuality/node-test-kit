@@ -1,7 +1,13 @@
 import { startBackend } from '../lifecycle/backend-process.js';
 import { startPactumServer } from '../lifecycle/pactum-server.js';
+import type { KitOptions } from './config.js';
 
-export default async function globalSetup(project) {
+interface GlobalSetupProject {
+  config: { nodeTestKit?: KitOptions };
+  provide<T extends string>(key: T, value: unknown): void;
+}
+
+export default async function globalSetup(project: GlobalSetupProject): Promise<() => Promise<void>> {
   const options = project.config.nodeTestKit ?? {};
   const mockServer = await startPactumServer(options.mock);
   let backend = null;

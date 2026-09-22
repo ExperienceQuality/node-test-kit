@@ -1,6 +1,16 @@
 import { spawn } from 'node:child_process';
 
-export async function startBackend({ command, url, cwd = process.cwd(), timeout = 30_000, env = {} }) {
+export interface BackendOptions {
+  command: string;
+  url: string;
+  cwd?: string;
+  timeout?: number;
+  env?: Record<string, string | undefined>;
+}
+
+export interface BackendProcess { url: string; stop(): Promise<void> }
+
+export async function startBackend({ command, url, cwd = process.cwd(), timeout = 30_000, env = {} }: BackendOptions): Promise<BackendProcess> {
   if (!command || !url) throw new Error('node-test-kit: application command and URL are required');
 
   const child = spawn(command, {
@@ -11,7 +21,7 @@ export async function startBackend({ command, url, cwd = process.cwd(), timeout 
   });
 
   const deadline = Date.now() + timeout;
-  let lastError;
+  let lastError: unknown;
 
   while (Date.now() < deadline) {
     if (child.exitCode !== null) {
@@ -22,7 +32,7 @@ export async function startBackend({ command, url, cwd = process.cwd(), timeout 
       const response = await fetch(url);
       if (response.status < 500) return {
         url,
-        async stop() {
+        async stop(): Promise<void> {
           if (child.exitCode === null) child.kill('SIGTERM');
         }
       };
@@ -34,5 +44,5 @@ export async function startBackend({ command, url, cwd = process.cwd(), timeout 
   }
 
   child.kill('SIGTERM');
-  throw new Error(`node-test-kit: backend did not become ready: ${lastError?.message ?? url}`);
+  throw new Error(`node-test-kit: backend did not become ready: ${lastError instanceof Error ? lastError.message : url}`);
 }
