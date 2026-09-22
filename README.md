@@ -10,6 +10,11 @@ Vitest-based foundation for backend functional and API E2E testing.
 - `packages/node-test-kit/` owns the stable public package and Vitest adapter.
 - `examples/backend-e2e/` exercises the packed consumer contract.
 
+`packages/api-client/` exposes `OpenApiClient`, `ApiRequest`, and `ApiResponse`.
+Consumers depend on these contracts only; PactumJS is private to the package and
+backs `createOpenApiClient`. OpenAPI-style paths support `pathParams`, query
+parameters, headers, and request bodies. `kit.api` uses this client internally.
+
 Every workspace keeps implementation in `src/` and tests in `test/`. The root
 package is private and contains only npm-workspace orchestration.
 

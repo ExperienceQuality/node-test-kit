@@ -1,2 +1,10 @@
-export { createApiClient } from './api-client.js';
-export type { ApiClient, ApiResponse, RequestOptions } from './api-client.js';
+export { createApiClient, createOpenApiClient } from './api-client.js';
+export type {
+  ApiClient,
+  ApiRequest,
+  ApiRequestOptions,
+  ApiResponse,
+  HttpMethod,
+  OpenApiClient,
+  RequestOptions
+} from './api-client.js';
