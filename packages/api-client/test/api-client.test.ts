@@ -1,33 +1,61 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createApiClient } from '../src/index.js';
+import { createServer, type Server } from 'node:http';
+import { afterEach, describe, expect, it } from 'vitest';
+import { createRestClient } from '../src/index.js';
 
-afterEach(() => vi.unstubAllGlobals());
+let server: Server | undefined;
 
-describe('createApiClient', () => {
-  it('combines the base URL and headers and decodes JSON responses', async () => {
-    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ created: true }), {
-      status: 201,
-      headers: { 'content-type': 'application/json', 'x-result': 'ok' }
-    }));
-    vi.stubGlobal('fetch', fetchMock);
-    const client = createApiClient({ baseUrl: 'http://127.0.0.1:4000/api', headers: { 'x-run': 'one' } });
+afterEach(async () => {
+  if (server) await new Promise<void>((resolve, reject) => server?.close((error) => error ? reject(error) : resolve()));
+  server = undefined;
+});
 
-    const response = await client.post<{ created: boolean }>('/orders', {
-      data: { productId: 'product-1' },
-      headers: { 'x-request': 'two' }
+describe('createRestClient', () => {
+  it('preserves Pactum fluent chaining, injects namespace, and captures response', async () => {
+    let requestHeaders: Record<string, string | string[] | undefined> = {};
+    server = createServer((request, response) => {
+      requestHeaders = request.headers;
+      response.writeHead(201, { 'content-type': 'application/json' });
+      response.end(JSON.stringify({ created: true }));
+    });
+    await new Promise<void>((resolve) => server?.listen(0, '127.0.0.1', () => resolve()));
+    const address = server.address();
+    if (!address || typeof address === 'string') throw new Error('test server did not start');
+
+    const rest = createRestClient({
+      baseUrl: `http://127.0.0.1:${address.port}`,
+      namespaceHeader: 'x-node-test-kit-namespace',
+      namespace: 'run-1'
     });
 
-    expect(fetchMock).toHaveBeenCalledWith(new URL('http://127.0.0.1:4000/orders'), {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-run': 'one', 'x-request': 'two' },
-      body: JSON.stringify({ productId: 'product-1' })
-    });
-    expect(response.status).toBe(201);
-    expect(response.body).toEqual({ created: true });
-    expect(response.headers['x-result']).toBe('ok');
+    const response = await rest
+      .post('/users')
+      .withJson({ name: 'Ada' })
+      .expectStatus(201)
+      .toss();
+
+    expect(response.statusCode).toBe(201);
+    expect(requestHeaders['x-node-test-kit-namespace']).toBe('run-1');
+    expect(rest.captures).toHaveLength(1);
+    expect(rest.captures[0]?.commands.map(({ name }) => name)).toEqual(['post', 'withJson', 'expectStatus']);
+    expect((rest.captures[0]?.response as { statusCode?: number }).statusCode).toBe(201);
   });
 
-  it('rejects requests when the backend URL is absent', async () => {
-    await expect(createApiClient({}).get('/health')).rejects.toThrow('backend URL is not configured');
+  it('captures response through implicit await and reapplies reserved header', async () => {
+    let namespace = '';
+    server = createServer((request, response) => {
+      namespace = String(request.headers['x-node-test-kit-namespace']);
+      response.writeHead(204);
+      response.end();
+    });
+    await new Promise<void>((resolve) => server?.listen(0, '127.0.0.1', () => resolve()));
+    const address = server.address();
+    if (!address || typeof address === 'string') throw new Error('test server did not start');
+
+    const rest = createRestClient({ baseUrl: `http://127.0.0.1:${address.port}`, namespaceHeader: 'x-node-test-kit-namespace', namespace: 'run-2' });
+    const response = await rest.get('/health').withHeaders({ 'x-node-test-kit-namespace': 'wrong' });
+
+    expect(response.statusCode).toBe(204);
+    expect(namespace).toBe('run-2');
+    expect(rest.captures[0]?.response).toBeDefined();
   });
 });

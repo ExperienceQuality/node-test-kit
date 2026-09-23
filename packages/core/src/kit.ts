@@ -1,14 +1,20 @@
-import { createApiClient, type ApiClient } from '@xq/node-test-kit-api-client';
+import { createRestClient, type RestClient } from '@xq/node-test-kit-api-client';
 import { createStubClient, type StubClient } from '@xq/node-test-kit-stub';
 import type { RunContext } from './run-context.js';
 
-export interface Kit { readonly api: ApiClient; readonly stub: StubClient; readonly run: RunContext }
+export interface Kit {
+  readonly api: RestClient;
+  readonly rest: RestClient;
+  readonly stub: StubClient;
+  readonly run: RunContext;
+}
 
 export function createKit(run: RunContext): Kit {
-  const api = createApiClient({
-    baseUrl: run.backendUrl,
-    headers: { 'x-node-test-kit-namespace': run.id }
+  const rest = createRestClient({
+    baseUrl: run.backendUrl ? new URL(run.backendUrl).origin : run.backendUrl,
+    namespaceHeader: run.mock.namespaceHeader,
+    namespace: run.id
   });
   const stub = createStubClient({ ...run.mock, namespace: run.id });
-  return Object.freeze({ api, stub, run });
+  return Object.freeze({ api: rest, rest, stub, run });
 }
