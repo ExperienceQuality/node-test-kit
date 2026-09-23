@@ -1,31 +1,13 @@
 import pactum from 'pactum';
 
 const { spec } = pactum;
-const HTTP_METHODS = new Set(['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace']);
 
 export type PactumSpec = ReturnType<typeof spec>;
 
-export interface RestCommand {
-  readonly name: string;
-  readonly args: readonly unknown[];
-}
-
 export interface RestCapture {
-  readonly commands: RestCommand[];
+  request: unknown;
   response?: unknown;
   error?: unknown;
-}
-
-export interface RestClient {
-  readonly captures: readonly RestCapture[];
-  get(path: string): PactumSpec;
-  post(path: string): PactumSpec;
-  put(path: string): PactumSpec;
-  patch(path: string): PactumSpec;
-  delete(path: string): PactumSpec;
-  head(path: string): PactumSpec;
-  options(path: string): PactumSpec;
-  trace(path: string): PactumSpec;
 }
 
 export interface RestClientOptions {
@@ -34,31 +16,42 @@ export interface RestClientOptions {
   readonly namespace: string;
 }
 
-export function createRestClient(options: RestClientOptions): RestClient {
-  const captures: RestCapture[] = [];
-  const factory = {} as RestClient;
+export class RestClient {
+  readonly captures: RestCapture[] = [];
 
-  return new Proxy(factory, {
-    get(_, property: string | symbol) {
-      if (property === 'captures') return captures;
-      if (typeof property !== 'string' || !HTTP_METHODS.has(property)) return undefined;
+  constructor(private readonly config: RestClientOptions) {}
 
-      return (path: string): PactumSpec => {
-        if (!options.baseUrl) throw new Error('node-test-kit: backend URL is not configured');
-        const capture: RestCapture = { commands: [{ name: property, args: [path] }] };
-        captures.push(capture);
+  get(path: string): PactumSpec { return this.createSpec('get', path); }
+  post(path: string): PactumSpec { return this.createSpec('post', path); }
+  put(path: string): PactumSpec { return this.createSpec('put', path); }
+  patch(path: string): PactumSpec { return this.createSpec('patch', path); }
+  delete(path: string): PactumSpec { return this.createSpec('delete', path); }
+  head(path: string): PactumSpec { return this.createSpec('head', path); }
+  options(path: string): PactumSpec { return this.createSpec('options', path); }
+  trace(path: string): PactumSpec { return this.createSpec('trace', path); }
 
-        const target = spec();
-        const request = applyHttpMethod(target, property, resolveUrl(options.baseUrl, path));
-        injectNamespace(request, options);
-        return proxySpec(request, capture, options);
-      };
-    }
-  });
+  private createSpec(method: HttpMethod, path: string): PactumSpec {
+    if (!this.config.baseUrl) throw new Error('node-test-kit: backend URL is not configured');
+
+    const target = createRequestSpec(method, resolveUrl(this.config.baseUrl, path));
+    const capture: RestCapture = { request: undefined };
+    this.captures.push(capture);
+
+    decorateHeaders(target, this.config);
+    decorateExecution(target, capture, this.config);
+    return target;
+  }
 }
 
-function applyHttpMethod(target: PactumSpec, method: string, url: string): PactumSpec {
-  switch (method) {
+export function createRestClient(options: RestClientOptions): RestClient {
+  return new RestClient(options);
+}
+
+type HttpMethod = 'get' | 'post' | 'put' | 'patch' | 'delete' | 'head' | 'options' | 'trace';
+
+function createRequestSpec(targetMethod: HttpMethod, url: string): PactumSpec {
+  const target = spec();
+  switch (targetMethod) {
     case 'get': return target.get(url);
     case 'post': return target.post(url);
     case 'put': return target.put(url);
@@ -67,65 +60,45 @@ function applyHttpMethod(target: PactumSpec, method: string, url: string): Pactu
     case 'head': return target.head(url);
     case 'options': return target.options(url);
     case 'trace': return target.trace(url);
-    default: throw new Error(`node-test-kit: unsupported REST method ${method}`);
   }
 }
 
-function proxySpec(target: PactumSpec, capture: RestCapture, options: RestClientOptions): PactumSpec {
-  let proxy: PactumSpec;
+function decorateHeaders(target: PactumSpec, options: RestClientOptions): void {
+  const withHeaders = target.withHeaders.bind(target);
+  const decoratedWithHeaders = (...args: [string, unknown] | [object]) => {
+    (withHeaders as (...values: unknown[]) => PactumSpec)(...args);
+    withHeaders(options.namespaceHeader, options.namespace);
+    return target;
+  };
+  target.withHeaders = decoratedWithHeaders as PactumSpec['withHeaders'];
+  withHeaders(options.namespaceHeader, options.namespace);
+}
 
-  proxy = new Proxy(target, {
-    get(specTarget, property, receiver) {
-      if (property === 'toss') {
-        return async (...args: unknown[]) => {
-          injectNamespace(specTarget, options);
-          try {
-            const response = await Reflect.apply(specTarget.toss, specTarget, args);
-            capture.response = response;
-            return response;
-          } catch (error) {
-            capture.error = error;
-            capture.response = getErrorResponse(error);
-            throw error;
-          }
-        };
-      }
+function decorateExecution(target: PactumSpec, capture: RestCapture, options: RestClientOptions): void {
+  const toss = target.toss.bind(target);
+  target.toss = async () => {
+    capture.request = readRequest(target);
+    injectNamespace(target, options);
 
-      if (property === 'then') {
-        return (onFulfilled?: (value: unknown) => unknown, onRejected?: (reason: unknown) => unknown) => {
-          injectNamespace(specTarget, options);
-          return specTarget.then(
-            (response: unknown) => {
-              capture.response = response;
-              return onFulfilled ? onFulfilled(response) : response;
-            },
-            (error: unknown) => {
-              capture.error = error;
-              capture.response = getErrorResponse(error);
-              if (onRejected) return onRejected(error);
-              throw error;
-            }
-          );
-        };
-      }
-
-      const value = Reflect.get(specTarget, property, receiver);
-      if (typeof value !== 'function') return value;
-
-      return (...args: unknown[]) => {
-        capture.commands.push({ name: String(property), args });
-        const result = Reflect.apply(value, specTarget, args);
-        if (property === 'withHeaders') injectNamespace(specTarget, options);
-        return result === specTarget ? proxy : result;
-      };
+    try {
+      const response = await toss();
+      capture.response = response;
+      return response;
+    } catch (error) {
+      capture.error = error;
+      capture.response = getErrorResponse(error);
+      throw error;
     }
-  });
-
-  return proxy;
+  };
 }
 
 function injectNamespace(target: PactumSpec, options: RestClientOptions): void {
   target.withHeaders(options.namespaceHeader, options.namespace);
+}
+
+function readRequest(target: PactumSpec): unknown {
+  const request = (target as unknown as { _request: unknown })._request;
+  return structuredClone(request);
 }
 
 function resolveUrl(baseUrl: string, path: string): string {

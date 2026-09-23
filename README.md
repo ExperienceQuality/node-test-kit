@@ -10,10 +10,10 @@ Vitest-based foundation for backend functional and API E2E testing.
 - `packages/node-test-kit/` owns the stable public package and Vitest adapter.
 - `examples/backend-e2e/` exercises the packed consumer contract.
 
-`packages/api-client/` provides a PactumJS `Spec` proxy. The proxy preserves
-Pactum's fluent API, injects the test namespace, records chained commands, and
-captures the response after `toss()` or implicit `await`. `kit.rest` uses this
-proxy internally.
+`packages/api-client/` provides a small PactumJS-backed client. It creates a
+native fluent `Spec`, injects the test namespace, and captures final request
+and response data after `toss()` or implicit `await`. `kit.rest` uses this
+client internally.
 
 Every workspace keeps implementation in `src/` and tests in `test/`. The root
 package is private and contains only npm-workspace orchestration.
@@ -56,7 +56,7 @@ Every test using `node-test-kit/vitest` receives one isolated `kit` fixture:
 | Member | Purpose |
 | --- | --- |
 | `kit.api` | Compatibility alias for `kit.rest`. |
-| `kit.rest` | PactumJS fluent `Spec` proxy for the application under test. Captures commands and responses. |
+| `kit.rest` | PactumJS fluent `Spec` client for the application under test. Captures requests and responses. |
 | `kit.stub` | Runtime PactumJS interaction control. Owns interaction cleanup. |
 | `kit.run` | Test ID, worker ID, backend URL, and mock metadata. |
 
