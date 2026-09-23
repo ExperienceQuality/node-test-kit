@@ -32,7 +32,7 @@ jobs:
         run: npm run check
       - name: Run unit and integration tests
         run: npm test
-      - name: Run backend functional E2E demo
-        run: npm run demo
+      - name: Run backend functional E2E tests
+        run: npm run test:e2e
       - name: Verify packed-package consumer
         run: npm run verify:packages

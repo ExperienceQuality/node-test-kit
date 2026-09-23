@@ -182,17 +182,19 @@ Global setup provides:
 `NODE_TEST_KIT_STUB_URL` is passed to an application started by the kit.
 PactumJS mock health endpoint is `${baseUrl}/api/pactum/health`.
 
-Run it with:
+Run framework E2E with:
 
 ```bash
-npm run demo
+npm run test:e2e
 ```
+
+`npm run demo` remains a compatibility alias.
 
 ## TypeScript development
 
-All package source, tests, and the demo are TypeScript. Install once from the
-repository root, then use `npm run check`, `npm test`, `npm run demo`, and
-`npm run build`. Compiled package output is written to each package's `dist/`
+All package source, tests, and the E2E example are TypeScript. Install once from
+the repository root, then use `npm run check`, `npm test`, `npm run test:e2e`,
+and `npm run build`. Compiled package output is written to each package's `dist/`
 directory; consumers continue to use only the `node-test-kit` export map.
 
 `npm run verify:structure` enforces the flat workspace layout and dependency

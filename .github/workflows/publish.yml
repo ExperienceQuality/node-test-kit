@@ -36,7 +36,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run release validation
-        run: npm run check && npm test && npm run demo && npm run verify:packages
+        run: npm run check && npm test && npm run test:e2e && npm run verify:packages
       - name: Refuse private package publication
         run: |
           if node -e "process.exit(require('./packages/node-test-kit/package.json').private === true ? 0 : 1)"; then
