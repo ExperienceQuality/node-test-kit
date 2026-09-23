@@ -1,10 +1,2 @@
-export { createApiClient, createOpenApiClient } from './api-client.js';
-export type {
-  ApiClient,
-  ApiRequest,
-  ApiRequestOptions,
-  ApiResponse,
-  HttpMethod,
-  OpenApiClient,
-  RequestOptions
-} from './api-client.js';
+export { createRestClient } from './api-client.js';
+export type { PactumSpec, RestCapture, RestClient, RestClientOptions, RestCommand } from './api-client.js';

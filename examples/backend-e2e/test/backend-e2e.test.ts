@@ -8,7 +8,7 @@ test('consumer drives a dummy backend through the kit facade', async ({ kit }) =
   expect(health.status).toBe(200);
   expect(body).toBe('OK');
   expect(kit.run.id).toBeTypeOf('string');
-  expect(kit.api).toBeDefined();
+  expect(kit.rest).toBeDefined();
 
   const payment = await kit.stub.add({
     request: {
@@ -23,11 +23,12 @@ test('consumer drives a dummy backend through the kit facade', async ({ kit }) =
   });
   expect(payment.id).toBeTypeOf('string');
 
-  const response = await kit.api.post('/orders', {
-    data: { productId: 'product-1' }
-  });
+  const response = await kit.rest
+    .post('/orders')
+    .withJson({ productId: 'product-1' })
+    .toss();
 
-  expect(response.status).toBe(201);
+  expect(response.statusCode).toBe(201);
   expect(response.body).toEqual({
     id: 'order-123',
     productId: 'product-1',

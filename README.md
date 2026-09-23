@@ -10,10 +10,10 @@ Vitest-based foundation for backend functional and API E2E testing.
 - `packages/node-test-kit/` owns the stable public package and Vitest adapter.
 - `examples/backend-e2e/` exercises the packed consumer contract.
 
-`packages/api-client/` exposes `OpenApiClient`, `ApiRequest`, and `ApiResponse`.
-Consumers depend on these contracts only; PactumJS is private to the package and
-backs `createOpenApiClient`. OpenAPI-style paths support `pathParams`, query
-parameters, headers, and request bodies. `kit.api` uses this client internally.
+`packages/api-client/` provides a PactumJS `Spec` proxy. The proxy preserves
+Pactum's fluent API, injects the test namespace, records chained commands, and
+captures the response after `toss()` or implicit `await`. `kit.rest` uses this
+proxy internally.
 
 Every workspace keeps implementation in `src/` and tests in `test/`. The root
 package is private and contains only npm-workspace orchestration.
@@ -40,7 +40,7 @@ export default defineConfig({
 import { test } from 'node-test-kit/vitest';
 
 test('uses the platform-owned kit fixture', async ({ kit }) => {
-  console.log(kit.api, kit.stub, kit.run);
+  console.log(kit.rest, kit.stub, kit.run);
 });
 ```
 
@@ -55,7 +55,7 @@ Every test using `node-test-kit/vitest` receives one isolated `kit` fixture:
 
 | Member | Purpose |
 | --- | --- |
-| `kit.api` | HTTP client for the application under test. Adds the test namespace header. |
+| `kit.rest` | PactumJS fluent `Spec` proxy for the application under test. Captures commands and responses. |
 | `kit.stub` | Runtime PactumJS interaction control. Owns interaction cleanup. |
 | `kit.run` | Test ID, worker ID, backend URL, and mock metadata. |
 
@@ -126,11 +126,13 @@ const payment = await kit.stub.add({
   }
 });
 
-const response = await kit.api.post('/orders', {
-  data: { productId: 'product-1' }
-});
+const response = await kit.rest
+  .post('/orders')
+  .withJson({ productId: 'product-1' })
+  .expectStatus(201)
+  .toss();
 
-expect(response.status).toBe(201);
+expect(response.statusCode).toBe(201);
 await kit.stub.verify(payment.id, { exercised: true, callCount: 1 });
 ```
 
