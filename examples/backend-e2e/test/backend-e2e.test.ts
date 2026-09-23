@@ -10,7 +10,7 @@ test('consumer drives a dummy backend through the kit facade', async ({ kit }) =
   expect(kit.run.id).toBeTypeOf('string');
   expect(kit.rest).toBeDefined();
 
-  const payment = await kit.stub.add({
+  const payment = await kit.stub.addInteraction({
     request: {
       method: 'POST',
       path: '/payments',
@@ -21,7 +21,7 @@ test('consumer drives a dummy backend through the kit facade', async ({ kit }) =
       body: { paymentId: 'pay-123', status: 'approved' }
     }
   });
-  expect(payment.id).toBeTypeOf('string');
+  expect(payment).toBeTypeOf('string');
 
   const response = await kit.rest
     .post('/orders')
@@ -35,5 +35,7 @@ test('consumer drives a dummy backend through the kit facade', async ({ kit }) =
     paymentId: 'pay-123',
     status: 'created'
   });
-  await kit.stub.verify(payment.id, { exercised: true, callCount: 1 });
+  const paymentInteraction = await kit.stub.getInteraction(payment);
+  expect(paymentInteraction.exercised).toBe(true);
+  expect(paymentInteraction.callCount).toBe(1);
 });
