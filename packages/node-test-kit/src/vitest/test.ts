@@ -17,7 +17,7 @@ export const test = vitestTest.extend<NodeTestKitFixtures>({
     try { await use(kit); } catch (error) { testError = error; }
 
     let cleanupError;
-    try { await kit.stub.clear(); } catch (error) { cleanupError = error; }
+    try { await kit.stub.clearInteractions(); } catch (error) { cleanupError = error; }
 
     if (testError && cleanupError) throw new AggregateError([testError, cleanupError], 'node-test-kit: test and fixture cleanup both failed');
     if (testError) throw testError;

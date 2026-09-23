@@ -88,10 +88,10 @@ test -> dummy backend POST /orders
 
 ## Runtime mock fixture
 
-`kit.stub` controls the shared PactumJS server from the test worker:
+`kit.stub` exposes PactumJS mock operations through a per-test class:
 
 ```js
-const interaction = await kit.stub.add({
+const interactionId = await kit.stub.addInteraction({
   request: {
     method: 'GET',
     path: '/inventory/{id}',
@@ -103,19 +103,21 @@ const interaction = await kit.stub.add({
   }
 });
 
-await kit.stub.verify(interaction.id, { exercised: true, callCount: 1 });
-await kit.stub.remove(interaction.id);
+const interaction = await kit.stub.getInteraction(interactionId);
+expect(interaction.exercised).toBe(true);
+expect(interaction.callCount).toBe(1);
+await kit.stub.removeInteraction(interactionId);
 ```
 
-Available operations: `add`, `get`, `verify`, `remove`, and `clear`.
-Interactions use PactumJS request/response syntax. Fixture cleanup removes
-only interactions created by that test. Do not call PactumJS global
-`clearInteractions()` from consumer tests.
+Available operations: `addInteraction`, `getInteraction`,
+`removeInteraction`, and `clearInteractions`. Interactions use PactumJS
+request/response syntax. Fixture cleanup removes only interactions created by
+that test. Do not call PactumJS global state directly from consumer tests.
 
 Use `verify` when a downstream call is part of the behavior contract:
 
 ```js
-const payment = await kit.stub.add({
+const payment = await kit.stub.addInteraction({
   request: {
     method: 'POST',
     path: '/payments',
@@ -134,7 +136,9 @@ const response = await kit.rest
   .toss();
 
 expect(response.statusCode).toBe(201);
-await kit.stub.verify(payment.id, { exercised: true, callCount: 1 });
+const paymentInteraction = await kit.stub.getInteraction(payment);
+expect(paymentInteraction.exercised).toBe(true);
+expect(paymentInteraction.callCount).toBe(1);
 ```
 
 `add` returns an interaction ID. `get` exposes PactumJS call metadata;
@@ -178,17 +182,19 @@ Global setup provides:
 `NODE_TEST_KIT_STUB_URL` is passed to an application started by the kit.
 PactumJS mock health endpoint is `${baseUrl}/api/pactum/health`.
 
-Run it with:
+Run framework E2E with:
 
 ```bash
-npm run demo
+npm run test:e2e
 ```
+
+`npm run demo` remains a compatibility alias.
 
 ## TypeScript development
 
-All package source, tests, and the demo are TypeScript. Install once from the
-repository root, then use `npm run check`, `npm test`, `npm run demo`, and
-`npm run build`. Compiled package output is written to each package's `dist/`
+All package source, tests, and the E2E example are TypeScript. Install once from
+the repository root, then use `npm run check`, `npm test`, `npm run test:e2e`,
+and `npm run build`. Compiled package output is written to each package's `dist/`
 directory; consumers continue to use only the `node-test-kit` export map.
 
 `npm run verify:structure` enforces the flat workspace layout and dependency
