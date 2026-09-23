@@ -2,11 +2,12 @@ import { expect } from 'vitest';
 import { test } from 'node-test-kit/vitest';
 
 test('consumer drives a dummy backend through the kit facade', async ({ kit }) => {
-  const health = await fetch(`${kit.stub.baseUrl}/api/pactum/health`);
-  const body = await health.text();
+  const health = await kit.rest
+    .get('/health')
+    .expectStatus(200)
+    .toss();
 
-  expect(health.status).toBe(200);
-  expect(body).toBe('OK');
+  expect(health.body).toEqual({ status: 'ok' });
   expect(kit.run.id).toBeTypeOf('string');
   expect(kit.rest).toBeDefined();
 
