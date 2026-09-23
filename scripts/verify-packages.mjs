@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const artifacts = resolve(root, 'artifacts');
 const packageNames = [
-  '@xq/node-test-kit-api-client',
+  '@xq/node-test-kit-rest-client',
   '@xq/node-test-kit-stub',
   '@xq/node-test-kit-core',
   'node-test-kit'

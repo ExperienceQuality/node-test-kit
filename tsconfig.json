@@ -1,7 +1,7 @@
 {
   "files": [],
   "references": [
-    { "path": "./packages/api-client" },
+    { "path": "./packages/rest-client" },
     { "path": "./packages/stub" },
     { "path": "./packages/core" },
     { "path": "./packages/node-test-kit" }

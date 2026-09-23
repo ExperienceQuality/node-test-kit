@@ -4,13 +4,13 @@ Vitest-based foundation for backend functional and API E2E testing.
 
 ## Monorepo layout
 
-- `packages/api-client/` owns the backend HTTP client.
+- `packages/rest-client/` owns the backend HTTP client.
 - `packages/stub/` owns the PactumJS server and runtime interaction client.
 - `packages/core/` composes lifecycle, run-context, API, and stub behavior.
 - `packages/node-test-kit/` owns the stable public package and Vitest adapter.
 - `examples/backend-e2e/` exercises the packed consumer contract.
 
-`packages/api-client/` provides a small PactumJS-backed client. It creates a
+`packages/rest-client/` provides a small PactumJS-backed client. It creates a
 native fluent `Spec`, injects the test namespace, and captures final request
 and response data after `toss()` or implicit `await`. `kit.rest` uses this
 client internally.

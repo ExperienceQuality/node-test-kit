@@ -1,4 +1,4 @@
-import { createRestClient, type RestClient } from '@xq/node-test-kit-api-client';
+import { createRestClient, type RestClient } from '@xq/node-test-kit-rest-client';
 import { StubClient } from '@xq/node-test-kit-stub';
 import type { RunContext } from './run-context.js';
 

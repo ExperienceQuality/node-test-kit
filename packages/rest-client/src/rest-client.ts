@@ -1,4 +1,6 @@
 import pactum from 'pactum';
+import { randomUUID } from 'node:crypto';
+import { CAPTURE_HEADER, PactumCaptureRegistry } from './pactum-capture-registry.js';
 
 const { spec } = pactum;
 
@@ -18,8 +20,14 @@ export interface RestClientOptions {
 
 export class RestClient {
   readonly captures: RestCapture[] = [];
+  private readonly captureKey = randomUUID();
 
-  constructor(private readonly config: RestClientOptions) {}
+  constructor(
+    readonly config: RestClientOptions,
+    private readonly captureRegistry: PactumCaptureRegistry
+  ) {
+    captureRegistry.register(this, this.captureKey);
+  }
 
   get(path: string): PactumSpec { return this.createSpec('get', path); }
   post(path: string): PactumSpec { return this.createSpec('post', path); }
@@ -33,18 +41,16 @@ export class RestClient {
   private createSpec(method: HttpMethod, path: string): PactumSpec {
     if (!this.config.baseUrl) throw new Error('node-test-kit: backend URL is not configured');
 
-    const target = createRequestSpec(method, resolveUrl(this.config.baseUrl, path));
-    const capture: RestCapture = { request: undefined };
-    this.captures.push(capture);
-
-    decorateHeaders(target, this.config);
-    decorateExecution(target, capture, this.config);
-    return target;
+    return createRequestSpec(method, resolveUrl(this.config.baseUrl, path))
+      .withHeaders(CAPTURE_HEADER, this.captureKey)
+      .withHeaders(this.config.namespaceHeader, this.config.namespace);
   }
 }
 
+const captureRegistry = new PactumCaptureRegistry();
+
 export function createRestClient(options: RestClientOptions): RestClient {
-  return new RestClient(options);
+  return new RestClient(options, captureRegistry);
 }
 
 type HttpMethod = 'get' | 'post' | 'put' | 'patch' | 'delete' | 'head' | 'options' | 'trace';
@@ -63,50 +69,6 @@ function createRequestSpec(targetMethod: HttpMethod, url: string): PactumSpec {
   }
 }
 
-function decorateHeaders(target: PactumSpec, options: RestClientOptions): void {
-  const withHeaders = target.withHeaders.bind(target);
-  const decoratedWithHeaders = (...args: [string, unknown] | [object]) => {
-    (withHeaders as (...values: unknown[]) => PactumSpec)(...args);
-    withHeaders(options.namespaceHeader, options.namespace);
-    return target;
-  };
-  target.withHeaders = decoratedWithHeaders as PactumSpec['withHeaders'];
-  withHeaders(options.namespaceHeader, options.namespace);
-}
-
-function decorateExecution(target: PactumSpec, capture: RestCapture, options: RestClientOptions): void {
-  const toss = target.toss.bind(target);
-  target.toss = async () => {
-    capture.request = readRequest(target);
-    injectNamespace(target, options);
-
-    try {
-      const response = await toss();
-      capture.response = response;
-      return response;
-    } catch (error) {
-      capture.error = error;
-      capture.response = getErrorResponse(error);
-      throw error;
-    }
-  };
-}
-
-function injectNamespace(target: PactumSpec, options: RestClientOptions): void {
-  target.withHeaders(options.namespaceHeader, options.namespace);
-}
-
-function readRequest(target: PactumSpec): unknown {
-  const request = (target as unknown as { _request: unknown })._request;
-  return structuredClone(request);
-}
-
 function resolveUrl(baseUrl: string, path: string): string {
   return `${baseUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
-}
-
-function getErrorResponse(error: unknown): unknown {
-  return error && typeof error === 'object' && 'response' in error
-    ? (error as { response?: unknown }).response
-    : undefined;
 }
