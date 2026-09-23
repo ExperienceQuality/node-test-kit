@@ -1,86 +1,117 @@
 import pactum from 'pactum';
+import type { Interaction, InteractionDetails } from 'pactum/src/exports/mock.js';
 
 const { mock } = pactum;
-const pactumMock = mock as unknown as {
-  useRemoteServer(url: string): void;
-  addInteraction(interaction: unknown): Promise<string>;
-  getInteraction(id: string): Promise<unknown>;
-  removeInteraction(id: string): Promise<void>;
-};
 const DEFAULT_NAMESPACE_HEADER = 'x-node-test-kit-namespace';
 
-export interface Interaction {
-  request: { headers?: Record<string, string | number | boolean>; [key: string]: unknown };
-  [key: string]: unknown;
+export type PactumInteraction = Interaction;
+export type PactumInteractionDetails = InteractionDetails;
+
+export interface StubClientOptions {
+  readonly baseUrl: string | null | undefined;
+  readonly namespace: string;
+  readonly namespaceHeader?: string;
 }
 
-export interface VerificationOptions { exercised?: boolean; callCount?: number }
-export interface StubClient {
+export class StubClient {
   readonly baseUrl: string;
   readonly namespace: string;
   readonly namespaceHeader: string;
-  add(interaction: Interaction): Promise<{ readonly id: string }>;
-  get(id: string): Promise<unknown>;
-  verify(id: string, expected?: VerificationOptions): Promise<unknown>;
-  remove(id: string): Promise<void>;
-  clear(): Promise<void>;
-}
 
-interface PactumInteraction extends Interaction { id?: string; exercised?: boolean; callCount?: number }
+  #owned = new Set<string>();
 
-export function createStubClient({ baseUrl, namespace, namespaceHeader = DEFAULT_NAMESPACE_HEADER }: { baseUrl: string | null | undefined; namespace: string; namespaceHeader?: string }): StubClient {
-  if (!baseUrl) throw new Error('node-test-kit: mock server URL is not configured');
-  if (!namespace) throw new Error('node-test-kit: mock namespace is required');
+  constructor(options: StubClientOptions) {
+    if (!options.baseUrl) throw new Error('node-test-kit: mock server URL is not configured');
+    if (!options.namespace) throw new Error('node-test-kit: mock namespace is required');
 
-  pactumMock.useRemoteServer(baseUrl);
-  const owned = new Set<string>();
+    this.baseUrl = options.baseUrl;
+    this.namespace = options.namespace;
+    this.namespaceHeader = options.namespaceHeader ?? DEFAULT_NAMESPACE_HEADER;
+    mock.useRemoteServer(this.baseUrl);
+  }
 
-  async function add(interaction: Interaction): Promise<{ readonly id: string }> {
-    const normalized = normalizeInteraction(interaction, namespaceHeader, namespace);
-    const id = await pactumMock.addInteraction(normalized);
-    owned.add(id);
-    return Object.freeze({ id });
+  async addInteraction(interaction: PactumInteraction): Promise<string>;
+  async addInteraction(interactions: PactumInteraction[]): Promise<string[]>;
+  async addInteraction(interaction: PactumInteraction | PactumInteraction[]): Promise<string | string[]> {
+    const input = Array.isArray(interaction)
+      ? interaction.map((item) => this.normalize(item))
+      : this.normalize(interaction);
+    const result = Array.isArray(input)
+      ? await mock.addInteraction(input)
+      : await mock.addInteraction(input);
+    const ids = Array.isArray(result) ? result : [result];
+    for (const id of ids) this.#owned.add(id);
+    return result as string | string[];
   }
-  async function get(id: string): Promise<unknown> {
-    assertOwned(id, owned);
-    return pactumMock.getInteraction(id);
+
+  async getInteraction(id: string): Promise<PactumInteractionDetails>;
+  async getInteraction(ids: string[]): Promise<PactumInteractionDetails[]>;
+  async getInteraction(id: string | string[]): Promise<PactumInteractionDetails | PactumInteractionDetails[]> {
+    this.assertOwned(id);
+    return Array.isArray(id)
+      ? await mock.getInteraction(id)
+      : await mock.getInteraction(id);
   }
-  async function verify(id: string, expected: VerificationOptions = {}): Promise<unknown> {
-    const interaction = await get(id) as PactumInteraction | undefined;
-    if (!interaction) throw new Error(`node-test-kit: interaction not found (${id})`);
-    if (expected.exercised === true && !interaction.exercised) throw new Error(`node-test-kit: interaction was not exercised (${id})`);
-    if (expected.callCount !== undefined && interaction.callCount !== expected.callCount) {
-      throw new Error(`node-test-kit: interaction call count ${interaction.callCount} !== ${expected.callCount} (${id})`);
-    }
-    return interaction;
+
+  async removeInteraction(id: string): Promise<void>;
+  async removeInteraction(ids: string[]): Promise<void>;
+  async removeInteraction(id: string | string[]): Promise<void> {
+    this.assertOwned(id);
+    if (Array.isArray(id)) await mock.removeInteraction(id);
+    else await mock.removeInteraction(id);
+    for (const ownedId of Array.isArray(id) ? id : [id]) this.#owned.delete(ownedId);
   }
-  async function remove(id: string): Promise<void> {
-    assertOwned(id, owned);
-    await pactumMock.removeInteraction(id);
-    owned.delete(id);
-  }
-  async function clear(): Promise<void> {
+
+  async clearInteractions(): Promise<void> {
     const failures: unknown[] = [];
-    for (const id of [...owned]) {
-      try { await remove(id); } catch (error) { failures.push(error); }
+    for (const id of [...this.#owned]) {
+      try {
+        await this.removeInteraction(id);
+      } catch (error) {
+        failures.push(error);
+      }
     }
-    if (failures.length > 0) throw new AggregateError(failures, 'node-test-kit: failed to clear mock interactions');
+    if (failures.length > 0) {
+      throw new AggregateError(failures, 'node-test-kit: failed to clear mock interactions');
+    }
   }
-  return Object.freeze({ baseUrl, namespace, namespaceHeader, add, get, verify, remove, clear });
+
+  private normalize(interaction: PactumInteraction): PactumInteraction {
+    if (!interaction || typeof interaction !== 'object' || Array.isArray(interaction)) {
+      throw new TypeError('node-test-kit: interaction must be an object');
+    }
+    if (!interaction.request || typeof interaction.request !== 'object') {
+      throw new TypeError('node-test-kit: interaction.request is required');
+    }
+
+    const suppliedHeaders = (interaction.request.headers ?? {}) as Record<string, unknown>;
+    const reserved = Object.keys(suppliedHeaders).find(
+      (name) => name.toLowerCase() === this.namespaceHeader.toLowerCase()
+    );
+    if (reserved && String(suppliedHeaders[reserved]) !== this.namespace) {
+      throw new Error(`node-test-kit: ${this.namespaceHeader} is reserved for fixture isolation`);
+    }
+
+    return {
+      ...interaction,
+      request: {
+        ...interaction.request,
+        headers: { ...suppliedHeaders, [this.namespaceHeader]: this.namespace }
+      }
+    };
+  }
+
+  private assertOwned(id: string | string[]): void {
+    const ids = Array.isArray(id) ? id : [id];
+    for (const ownedId of ids) {
+      if (!this.#owned.has(ownedId)) {
+        throw new Error(`node-test-kit: interaction is not owned by this fixture (${ownedId})`);
+      }
+    }
+  }
 }
 
-function normalizeInteraction(interaction: Interaction, namespaceHeader: string, namespace: string): Interaction {
-  if (!interaction || typeof interaction !== 'object' || Array.isArray(interaction)) throw new TypeError('node-test-kit: interaction must be an object');
-  if (!interaction.request || typeof interaction.request !== 'object') throw new TypeError('node-test-kit: interaction.request is required');
-  const suppliedHeaders = interaction.request.headers ?? {};
-  const reserved = Object.keys(suppliedHeaders).find((name) => name.toLowerCase() === namespaceHeader.toLowerCase());
-  if (reserved && String(suppliedHeaders[reserved]) !== namespace) throw new Error(`node-test-kit: ${namespaceHeader} is reserved for fixture isolation`);
-  return {
-    ...interaction,
-    request: { ...interaction.request, headers: { ...suppliedHeaders, [namespaceHeader]: namespace } }
-  };
-}
-
-function assertOwned(id: unknown, owned: Set<string>): asserts id is string {
-  if (typeof id !== 'string' || !owned.has(id)) throw new Error(`node-test-kit: interaction is not owned by this fixture (${id ?? 'missing id'})`);
+/** @deprecated Use `new StubClient(options)`. */
+export function createStubClient(options: StubClientOptions): StubClient {
+  return new StubClient(options);
 }

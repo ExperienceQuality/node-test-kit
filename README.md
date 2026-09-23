@@ -88,10 +88,10 @@ test -> dummy backend POST /orders
 
 ## Runtime mock fixture
 
-`kit.stub` controls the shared PactumJS server from the test worker:
+`kit.stub` exposes PactumJS mock operations through a per-test class:
 
 ```js
-const interaction = await kit.stub.add({
+const interactionId = await kit.stub.addInteraction({
   request: {
     method: 'GET',
     path: '/inventory/{id}',
@@ -103,19 +103,21 @@ const interaction = await kit.stub.add({
   }
 });
 
-await kit.stub.verify(interaction.id, { exercised: true, callCount: 1 });
-await kit.stub.remove(interaction.id);
+const interaction = await kit.stub.getInteraction(interactionId);
+expect(interaction.exercised).toBe(true);
+expect(interaction.callCount).toBe(1);
+await kit.stub.removeInteraction(interactionId);
 ```
 
-Available operations: `add`, `get`, `verify`, `remove`, and `clear`.
-Interactions use PactumJS request/response syntax. Fixture cleanup removes
-only interactions created by that test. Do not call PactumJS global
-`clearInteractions()` from consumer tests.
+Available operations: `addInteraction`, `getInteraction`,
+`removeInteraction`, and `clearInteractions`. Interactions use PactumJS
+request/response syntax. Fixture cleanup removes only interactions created by
+that test. Do not call PactumJS global state directly from consumer tests.
 
 Use `verify` when a downstream call is part of the behavior contract:
 
 ```js
-const payment = await kit.stub.add({
+const payment = await kit.stub.addInteraction({
   request: {
     method: 'POST',
     path: '/payments',
@@ -134,7 +136,9 @@ const response = await kit.rest
   .toss();
 
 expect(response.statusCode).toBe(201);
-await kit.stub.verify(payment.id, { exercised: true, callCount: 1 });
+const paymentInteraction = await kit.stub.getInteraction(payment);
+expect(paymentInteraction.exercised).toBe(true);
+expect(paymentInteraction.callCount).toBe(1);
 ```
 
 `add` returns an interaction ID. `get` exposes PactumJS call metadata;
