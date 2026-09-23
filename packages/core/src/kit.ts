@@ -2,7 +2,12 @@ import { createRestClient, type RestClient } from '@xq/node-test-kit-api-client'
 import { createStubClient, type StubClient } from '@xq/node-test-kit-stub';
 import type { RunContext } from './run-context.js';
 
-export interface Kit { readonly rest: RestClient; readonly stub: StubClient; readonly run: RunContext }
+export interface Kit {
+  readonly api: RestClient;
+  readonly rest: RestClient;
+  readonly stub: StubClient;
+  readonly run: RunContext;
+}
 
 export function createKit(run: RunContext): Kit {
   const rest = createRestClient({
@@ -11,5 +16,5 @@ export function createKit(run: RunContext): Kit {
     namespace: run.id
   });
   const stub = createStubClient({ ...run.mock, namespace: run.id });
-  return Object.freeze({ rest, stub, run });
+  return Object.freeze({ api: rest, rest, stub, run });
 }

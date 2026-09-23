@@ -55,6 +55,7 @@ Every test using `node-test-kit/vitest` receives one isolated `kit` fixture:
 
 | Member | Purpose |
 | --- | --- |
+| `kit.api` | Compatibility alias for `kit.rest`. |
 | `kit.rest` | PactumJS fluent `Spec` proxy for the application under test. Captures commands and responses. |
 | `kit.stub` | Runtime PactumJS interaction control. Owns interaction cleanup. |
 | `kit.run` | Test ID, worker ID, backend URL, and mock metadata. |

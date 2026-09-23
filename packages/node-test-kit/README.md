@@ -17,5 +17,6 @@ import { expect, test } from 'node-test-kit/vitest';
 
 test('uses the platform fixture', async ({ kit }) => {
   expect(kit.rest).toBeDefined();
+  expect(kit.api).toBe(kit.rest);
 });
 ```
