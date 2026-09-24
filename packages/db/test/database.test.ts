@@ -7,14 +7,20 @@ interface OrdersDatabase {
 
 describe('database clients', () => {
   it('creates frozen named Kysely clients from environment-backed descriptors', async () => {
-    const clients = createDatabaseClients<{ orders: OrdersDatabase }>({
+    const clients = createDatabaseClients({
       orders: { urlEnv: 'ORDERS_DATABASE_URL', defaultSchema: 'sales', pool: { max: 1 } }
     }, { ORDERS_DATABASE_URL: 'postgres://test:test@127.0.0.1:1/test' });
 
-    expect(Object.keys(clients)).toEqual(['orders']);
     expect(Object.isFrozen(clients)).toBe(true);
-    expect(clients.orders.selectFrom('orders').select(['id', 'status']).compile().sql)
+    const orders = clients.get('orders') as import('kysely').Kysely<OrdersDatabase>;
+    expect(orders.selectFrom('orders').select(['id', 'status']).compile().sql)
       .toBe('select "id", "status" from "sales"."orders"');
+    await destroyDatabaseClients(clients);
+  });
+
+  it('rejects lookup of an unconfigured database', async () => {
+    const clients = createDatabaseClients({}, {});
+    expect(() => clients.get('orders')).toThrow('node-test-kit: database "orders" is not configured');
     await destroyDatabaseClients(clients);
   });
 

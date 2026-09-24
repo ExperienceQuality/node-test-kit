@@ -58,15 +58,14 @@ Every test using `node-test-kit/vitest` receives one isolated `kit` fixture:
 | --- | --- |
 | `kit.api` | Compatibility alias for `kit.rest`. |
 | `kit.rest` | PactumJS fluent `Spec` client for the application under test. Captures requests and responses. |
-| `kit.db.<name>` | Named, typed Kysely client configured for the current worker. |
+| `kit.db.get(name)` | Looks up a named Kysely client configured for the current worker. |
 | `kit.stub` | Runtime PactumJS interaction control. Owns interaction cleanup. |
 | `kit.run` | Test ID, worker ID, backend URL, and mock metadata. |
 
 ## Typed PostgreSQL clients
 
-The framework keeps ownership of the exported `test` function. Consumers register
-their database types by augmenting `NodeTestKitDatabases`, then configure matching
-runtime names with environment-backed descriptors:
+The framework keeps ownership of the exported `test` function. Consumers configure
+named, environment-backed database descriptors:
 
 ```ts
 // vitest.config.ts
@@ -84,40 +83,29 @@ export default defineConfig({
 });
 ```
 
+Tests continue to import the platform-owned fixture:
+
 ```ts
+import type { Kysely } from '@xq/node-test-kit-db';
+import { test } from 'node-test-kit/vitest';
+
 interface OrdersDatabase {
   orders: { id: number; status: string };
 }
 
-interface AnalyticsDatabase {
-  daily_metrics: { day: string; order_count: number };
-}
-
-declare module 'node-test-kit/vitest' {
-  interface NodeTestKitDatabases {
-    orders: OrdersDatabase;
-    analytics: AnalyticsDatabase;
-  }
-}
-```
-
-Tests continue to import the platform-owned fixture:
-
-```ts
-import { test } from 'node-test-kit/vitest';
-
 test('checks an order and its reporting data', async ({ kit }) => {
-  const order = await kit.db.orders
+  const orders = kit.db.get('orders') as Kysely<OrdersDatabase>;
+  const order = await orders
     .selectFrom('orders')
     .selectAll()
     .executeTakeFirstOrThrow();
 
-  const metrics = await kit.db.analytics
-    .selectFrom('daily_metrics')
-    .selectAll()
-    .execute();
+  const analytics = kit.db.get('analytics');
 });
 ```
+
+`get()` returns `Kysely<any>` because each consumer owns its schemas. Cast the
+result to `Kysely<YourDatabase>` locally, or wrap lookup in an application helper.
 
 The database package creates clients, while the Vitest adapter composes them into
 the public fixture; `core` remains database agnostic. Each configured name creates
@@ -128,12 +116,12 @@ multiple PostgreSQL schemas.
 
 Configuration contains environment variable names, never connection strings.
 The worker reads each URL from its environment. Missing variables fail with the
-database name and variable name. Tests without `databases` keep `kit.db` as an
-empty object and require no PostgreSQL configuration.
+database name and variable name. Tests without `databases` still receive
+`kit.db`; any lookup fails with a clear not-configured error.
 
 Consumers own migrations and schema type generation. They also own cleanup for
 rows created by tests or the application under test. A transaction opened through
-`kit.db` cannot roll back writes made through the application's separate pool.
+`kit.db.get(name)` cannot roll back writes made through the application's separate pool.
 
 The default mock server binds to loopback on an available port. Configure a
 fixed port only when the test process owns that port:

@@ -1,14 +1,13 @@
 import { fileURLToPath } from 'node:url';
 import type { BackendOptions } from '@xq/node-test-kit-core';
-import type { DatabaseDescriptors } from '@xq/node-test-kit-db';
+import type { DatabaseOptions } from '@xq/node-test-kit-db';
 import type { PactumServerOptions } from '@xq/node-test-kit-stub';
 import type { UserConfig } from 'vite';
 import { defineConfig as defineVitestConfig, type TestUserConfig } from 'vitest/config';
-import type { NodeTestKitDatabases } from './test.js';
 
 export interface KitOptions {
   application?: BackendOptions;
-  databases?: DatabaseDescriptors<NodeTestKitDatabases>;
+  databases?: DatabaseOptions;
   mock?: PactumServerOptions;
 }
 

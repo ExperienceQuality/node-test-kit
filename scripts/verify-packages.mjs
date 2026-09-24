@@ -59,6 +59,7 @@ export default defineConfig({
 });
 `);
   await writeFile(join(consumer, 'test', 'legacy-imports.test.ts'), `import * as root from 'node-test-kit';
+import type { Kysely } from '@xq/node-test-kit-db';
 import { expect, test } from 'node-test-kit/vitest';
 import { defineConfig } from 'node-test-kit/vitest/config';
 
@@ -66,18 +67,13 @@ interface OrdersDatabase {
   orders: { id: number; status: string };
 }
 
-declare module 'node-test-kit/vitest' {
-  interface NodeTestKitDatabases {
-    orders: OrdersDatabase;
-  }
-}
-
 test('loads every legacy package entrypoint from packed archives', ({ kit }) => {
   expect(root.test).toBe(test);
   expect(root.expect).toBe(expect);
   expect(root.defineConfig).toBe(defineConfig);
   expect(kit.api).toBeDefined();
-  expect(kit.db.orders.selectFrom('orders').select('status').compile().sql)
+  const orders = kit.db.get('orders') as Kysely<OrdersDatabase>;
+  expect(orders.selectFrom('orders').select('status').compile().sql)
     .toBe('select "status" from "sales"."orders"');
   expect(defineConfig()).toBeDefined();
 });

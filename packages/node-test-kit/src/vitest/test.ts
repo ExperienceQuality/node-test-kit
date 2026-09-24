@@ -3,30 +3,28 @@ import {
   createDatabaseClients,
   destroyDatabaseClients,
   type DatabaseClients,
-  type DatabaseDescriptors
+  type DatabaseOptions
 } from '@xq/node-test-kit-db';
 import { expect as vitestExpect, inject, test as vitestTest, type TestAPI } from 'vitest';
-
-export interface NodeTestKitDatabases {}
 
 declare module 'vitest' {
   interface ProvidedContext {
     nodeTestKit: {
       mock: { baseUrl: string; host: string; port: number; managementUrl: string; namespaceHeader: string };
       backendUrl: string | null;
-      databases: DatabaseDescriptors<NodeTestKitDatabases>;
+      databases: DatabaseOptions;
     };
   }
 }
 
-export type NodeTestKit = Kit & { readonly db: DatabaseClients<NodeTestKitDatabases> };
+export type NodeTestKit = Kit & { readonly db: DatabaseClients };
 
 interface NodeTestKitFixtures { kit: NodeTestKit }
-interface NodeTestKitWorkerFixtures { nodeTestKitDatabases: DatabaseClients<NodeTestKitDatabases> }
+interface NodeTestKitWorkerFixtures { nodeTestKitDatabases: DatabaseClients }
 
 const extendedTest = vitestTest.extend<NodeTestKitFixtures & NodeTestKitWorkerFixtures>({
   nodeTestKitDatabases: [async ({}, use) => {
-    const databases = createDatabaseClients<NodeTestKitDatabases>(inject('nodeTestKit').databases);
+    const databases = createDatabaseClients(inject('nodeTestKit').databases);
     try {
       await use(databases);
     } finally {

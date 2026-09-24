@@ -16,22 +16,18 @@ export default defineConfig({
 ```
 
 ```ts
+import type { Kysely } from '@xq/node-test-kit-db';
 import { expect, test } from 'node-test-kit/vitest';
 
 interface PrimaryDatabase {
   users: { id: number; email: string };
 }
 
-declare module 'node-test-kit/vitest' {
-  interface NodeTestKitDatabases {
-    primary: PrimaryDatabase;
-  }
-}
-
 test('uses the platform fixture', async ({ kit }) => {
   expect(kit.rest).toBeDefined();
   expect(kit.api).toBe(kit.rest);
-  const users = await kit.db.primary.selectFrom('users').selectAll().execute();
+  const database = kit.db.get('primary') as Kysely<PrimaryDatabase>;
+  const users = await database.selectFrom('users').selectAll().execute();
 });
 ```
 

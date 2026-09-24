@@ -1,26 +1,30 @@
 import { Kysely, PostgresDialect } from 'kysely';
-import { Pool, type PoolConfig } from 'pg';
+import { Pool } from 'pg';
 
-export interface DatabaseDescriptor {
-  readonly urlEnv: string;
-  readonly defaultSchema?: string;
-  readonly pool?: Readonly<Pick<PoolConfig, 'max' | 'idleTimeoutMillis' | 'connectionTimeoutMillis' | 'allowExitOnIdle'>>;
-}
+export type DatabaseDescriptor = {
+  urlEnv: string;
+  defaultSchema?: string;
+  pool?: {
+    max?: number;
+    idleTimeoutMillis?: number;
+    connectionTimeoutMillis?: number;
+    allowExitOnIdle?: boolean;
+  };
+};
 
-export type DatabaseDescriptors<Databases = Record<string, unknown>> = Readonly<{
-  [Name in keyof Databases]: DatabaseDescriptor;
-}>;
+export type DatabaseOptions = { [name: string]: DatabaseDescriptor };
 
-export type DatabaseClients<Databases> = Readonly<{
-  [Name in keyof Databases]: Kysely<Databases[Name]>;
-}>;
+export type DatabaseClients = {
+  get(name: string): Kysely<any>;
+};
 
-export function createDatabaseClients<Databases>(
-  descriptors: DatabaseDescriptors<Databases>,
+const clientsByRegistry = new WeakMap<DatabaseClients, readonly Kysely<any>[]>();
+
+export function createDatabaseClients(
+  descriptors: DatabaseOptions,
   environment: NodeJS.ProcessEnv = process.env
-): DatabaseClients<Databases> {
-  const descriptorEntries = Object.entries(descriptors) as [string, DatabaseDescriptor][];
-  const configured = descriptorEntries.map(([name, descriptor]) => {
+): DatabaseClients {
+  const configured = Object.entries(descriptors).map(([name, descriptor]) => {
     const connectionString = environment[descriptor.urlEnv];
     if (!connectionString) {
       throw new Error(`node-test-kit: database "${name}" requires environment variable ${descriptor.urlEnv}`);
@@ -37,13 +41,23 @@ export function createDatabaseClients<Databases>(
     return [name, descriptor.defaultSchema ? database.withSchema(descriptor.defaultSchema) : database] as const;
   });
 
-  return Object.freeze(Object.fromEntries(entries)) as unknown as DatabaseClients<Databases>;
+  const clients = new Map(entries);
+  const registry: DatabaseClients = Object.freeze({
+    get(name: string) {
+      const database = clients.get(name);
+      if (!database) throw new Error(`node-test-kit: database "${name}" is not configured`);
+      return database;
+    }
+  });
+  clientsByRegistry.set(registry, [...clients.values()]);
+  return registry;
 }
 
-export async function destroyDatabaseClients<Databases>(clients: DatabaseClients<Databases>): Promise<void> {
+export async function destroyDatabaseClients(clients: DatabaseClients): Promise<void> {
   const results = await Promise.allSettled(
-    Object.values(clients as unknown as Record<string, Kysely<Record<string, never>>>).map((database) => database.destroy())
+    (clientsByRegistry.get(clients) ?? []).map((database) => database.destroy())
   );
+  clientsByRegistry.delete(clients);
   const errors = results
     .filter((result): result is PromiseRejectedResult => result.status === 'rejected')
     .map((result) => result.reason);
