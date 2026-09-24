@@ -58,7 +58,7 @@ Every test using `node-test-kit/vitest` receives one isolated `kit` fixture:
 | --- | --- |
 | `kit.api` | Compatibility alias for `kit.rest`. |
 | `kit.rest` | PactumJS fluent `Spec` client for the application under test. Captures requests and responses. |
-| `kit.db.get(name)` | Looks up a named Kysely client configured for the current worker. |
+| `kit.db.get<Database>(name)` | Looks up a named, typed Kysely client configured for the current worker. |
 | `kit.stub` | Runtime PactumJS interaction control. Owns interaction cleanup. |
 | `kit.run` | Test ID, worker ID, backend URL, and mock metadata. |
 
@@ -94,7 +94,7 @@ interface OrdersDatabase {
 }
 
 test('checks an order and its reporting data', async ({ kit }) => {
-  const orders = kit.db.get('orders') as Kysely<OrdersDatabase>;
+  const orders = kit.db.get<OrdersDatabase>('orders');
   const order = await orders
     .selectFrom('orders')
     .selectAll()

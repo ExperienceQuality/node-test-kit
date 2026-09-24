@@ -14,7 +14,7 @@ interface PrimaryDatabase {
 
 test('queries PostgreSQL through the named typed database fixture', async ({ kit }) => {
   const schema = `node_test_kit_${randomUUID().replaceAll('-', '')}`;
-  const primary = kit.db.get('primary') as Kysely<PrimaryDatabase>;
+  const primary = kit.db.get<PrimaryDatabase>('primary');
   await sql.raw(`create schema "${schema}"`).execute(primary);
 
   try {

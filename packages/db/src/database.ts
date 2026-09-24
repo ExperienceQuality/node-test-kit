@@ -15,7 +15,7 @@ export type DatabaseDescriptor = {
 export type DatabaseOptions = { [name: string]: DatabaseDescriptor };
 
 export type DatabaseClients = {
-  get(name: string): Kysely<any>;
+  get<Database = any>(name: string): Kysely<Database>;
 };
 
 const clientsByRegistry = new WeakMap<DatabaseClients, readonly Kysely<any>[]>();
@@ -43,10 +43,10 @@ export function createDatabaseClients(
 
   const clients = new Map(entries);
   const registry: DatabaseClients = Object.freeze({
-    get(name: string) {
+    get<Database = any>(name: string): Kysely<Database> {
       const database = clients.get(name);
       if (!database) throw new Error(`node-test-kit: database "${name}" is not configured`);
-      return database;
+      return database as Kysely<Database>;
     }
   });
   clientsByRegistry.set(registry, [...clients.values()]);

@@ -26,7 +26,7 @@ interface PrimaryDatabase {
 test('uses the platform fixture', async ({ kit }) => {
   expect(kit.rest).toBeDefined();
   expect(kit.api).toBe(kit.rest);
-  const database = kit.db.get('primary') as Kysely<PrimaryDatabase>;
+  const database = kit.db.get<PrimaryDatabase>('primary');
   const users = await database.selectFrom('users').selectAll().execute();
 });
 ```
