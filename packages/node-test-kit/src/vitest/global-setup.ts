@@ -31,7 +31,8 @@ export default async function globalSetup(project: GlobalSetupProject): Promise<
       managementUrl: mockServer.managementUrl,
       namespaceHeader: mockServer.namespaceHeader
     },
-    backendUrl: backend?.url ?? options.application?.url ?? null
+    backendUrl: backend?.url ?? options.application?.url ?? null,
+    databases: options.databases ?? {}
   });
 
   return async function globalTeardown() {

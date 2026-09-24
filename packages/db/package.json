@@ -1,5 +1,5 @@
 {
-  "name": "@xq/node-test-kit-core",
+  "name": "@xq/node-test-kit-db",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -16,9 +16,9 @@
   },
   "engines": { "node": ">=24" },
   "dependencies": {
-    "@xq/node-test-kit-rest-client": "0.1.0",
-    "@xq/node-test-kit-db": "0.1.0",
-    "@xq/node-test-kit-stub": "0.1.0"
+    "@types/pg": "^8.15.5",
+    "kysely": "^0.28.8",
+    "pg": "^8.16.3"
   },
   "files": ["dist", "package.json"]
 }

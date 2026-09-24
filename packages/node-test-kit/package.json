@@ -22,11 +22,13 @@
   "scripts": {
     "build": "tsc -b",
     "check": "tsc -p tsconfig.test.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:postgres": "vitest run --config vitest.database.config.ts"
   },
   "engines": { "node": ">=24" },
   "dependencies": {
     "@xq/node-test-kit-core": "0.1.0",
+    "@xq/node-test-kit-db": "0.1.0",
     "@xq/node-test-kit-stub": "0.1.0"
   },
   "peerDependencies": { "vitest": "^4.0.0" },

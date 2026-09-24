@@ -8,8 +8,9 @@ describe('core kit', () => {
     });
     const kit = createKit(run);
 
-    expect(Object.keys(kit)).toEqual(['api', 'rest', 'stub', 'run']);
+    expect(Object.keys(kit)).toEqual(['api', 'db', 'rest', 'stub', 'run']);
     expect(kit.api).toBe(kit.rest);
+    expect(kit.db).toEqual({});
     expect(kit.run.testId).toBe('orders-test');
     expect(kit.stub.namespace).toBe(kit.run.id);
     expect(Object.isFrozen(kit)).toBe(true);
