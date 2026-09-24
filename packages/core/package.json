@@ -16,7 +16,7 @@
   },
   "engines": { "node": ">=24" },
   "dependencies": {
-    "@xq/node-test-kit-api-client": "0.1.0",
+    "@xq/node-test-kit-rest-client": "0.1.0",
     "@xq/node-test-kit-stub": "0.1.0"
   },
   "files": ["dist", "package.json"]

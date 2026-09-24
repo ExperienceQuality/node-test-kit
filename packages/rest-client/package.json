@@ -1,5 +1,5 @@
 {
-  "name": "@xq/node-test-kit-api-client",
+  "name": "@xq/node-test-kit-rest-client",
   "version": "0.1.0",
   "private": true,
   "type": "module",

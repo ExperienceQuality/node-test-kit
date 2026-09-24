@@ -36,7 +36,12 @@ describe('createRestClient', () => {
     expect(response.statusCode).toBe(201);
     expect(requestHeaders['x-node-test-kit-namespace']).toBe('run-1');
     expect(rest.captures).toHaveLength(1);
-    expect(rest.captures[0]?.commands.map(({ name }) => name)).toEqual(['post', 'withJson', 'expectStatus']);
+    expect(rest.captures[0]?.request).toMatchObject({
+      method: 'POST',
+      url: `http://127.0.0.1:${address.port}/users`,
+      data: { name: 'Ada' },
+      headers: { 'x-node-test-kit-namespace': 'run-1' }
+    });
     expect((rest.captures[0]?.response as { statusCode?: number }).statusCode).toBe(201);
   });
 
@@ -56,6 +61,11 @@ describe('createRestClient', () => {
 
     expect(response.statusCode).toBe(204);
     expect(namespace).toBe('run-2');
+    expect(rest.captures[0]?.request).toMatchObject({
+      method: 'GET',
+      url: `http://127.0.0.1:${address.port}/health`,
+      headers: { 'x-node-test-kit-namespace': 'run-2' }
+    });
     expect(rest.captures[0]?.response).toBeDefined();
   });
 });

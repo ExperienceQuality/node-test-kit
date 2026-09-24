@@ -3,12 +3,12 @@ import { dirname, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const libraryNames = ['api-client', 'stub', 'core', 'node-test-kit'];
+const libraryNames = ['rest-client', 'stub', 'core', 'node-test-kit'];
 const workspacePaths = [...libraryNames.map((name) => `packages/${name}`), 'examples/backend-e2e'];
 const expectedDependencies = new Map([
-  ['api-client', []],
+  ['rest-client', []],
   ['stub', []],
-  ['core', ['@xq/node-test-kit-api-client', '@xq/node-test-kit-stub']],
+  ['core', ['@xq/node-test-kit-rest-client', '@xq/node-test-kit-stub']],
   ['node-test-kit', ['@xq/node-test-kit-core', '@xq/node-test-kit-stub']]
 ]);
 
