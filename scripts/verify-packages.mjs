@@ -8,6 +8,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const artifacts = resolve(root, 'artifacts');
 const packageNames = [
   '@xq/node-test-kit-rest-client',
+  '@xq/node-test-kit-db',
   '@xq/node-test-kit-stub',
   '@xq/node-test-kit-core',
   'node-test-kit'
@@ -52,17 +53,28 @@ try {
   await mkdir(join(consumer, 'test'), { recursive: true });
   await writeFile(join(consumer, 'vitest.config.ts'), `import { defineConfig } from 'node-test-kit/vitest/config';
 
-export default defineConfig({ test: { include: ['test/**/*.test.ts'] } });
+export default defineConfig({
+  databases: { orders: { urlEnv: 'PACKAGE_SMOKE_DATABASE_URL', defaultSchema: 'sales' } },
+  test: { include: ['test/**/*.test.ts'] }
+});
 `);
   await writeFile(join(consumer, 'test', 'legacy-imports.test.ts'), `import * as root from 'node-test-kit';
+import type { Kysely } from '@xq/node-test-kit-db';
 import { expect, test } from 'node-test-kit/vitest';
 import { defineConfig } from 'node-test-kit/vitest/config';
+
+interface OrdersDatabase {
+  orders: { id: number; status: string };
+}
 
 test('loads every legacy package entrypoint from packed archives', ({ kit }) => {
   expect(root.test).toBe(test);
   expect(root.expect).toBe(expect);
   expect(root.defineConfig).toBe(defineConfig);
   expect(kit.api).toBeDefined();
+  const orders = kit.db.get('orders') as Kysely<OrdersDatabase>;
+  expect(orders.selectFrom('orders').select('status').compile().sql)
+    .toBe('select "status" from "sales"."orders"');
   expect(defineConfig()).toBeDefined();
 });
 `);
@@ -78,18 +90,20 @@ test('loads every legacy package entrypoint from packed archives', ({ kit }) => 
     '@types/node@^24.0.0'
   ], consumer);
   run(resolve(consumer, 'node_modules/.bin/tsc'), ['-p', 'tsconfig.json'], consumer);
-  run(resolve(consumer, 'node_modules/.bin/vitest'), ['run', '--config', 'vitest.config.ts'], consumer);
+  run(resolve(consumer, 'node_modules/.bin/vitest'), ['run', '--config', 'vitest.config.ts'], consumer, {
+    PACKAGE_SMOKE_DATABASE_URL: 'postgres://test:test@127.0.0.1:1/test'
+  });
 
   console.log(`verified ${archives.length} archives in a fresh NodeNext/Vitest consumer`);
 } finally {
   await rm(consumer, { recursive: true, force: true });
 }
 
-function run(command, args, cwd) {
+function run(command, args, cwd, extraEnvironment = {}) {
   const result = spawnSync(command, args, {
     cwd,
     encoding: 'utf8',
-    env: { ...process.env, npm_config_cache: npmCache }
+    env: { ...process.env, ...extraEnvironment, npm_config_cache: npmCache }
   });
   if (result.status !== 0) {
     throw new Error(`${command} ${args.join(' ')} failed\n${result.stdout}\n${result.stderr}`);
