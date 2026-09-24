@@ -7,17 +7,20 @@ export interface DatabaseDescriptor {
   readonly pool?: Readonly<Pick<PoolConfig, 'max' | 'idleTimeoutMillis' | 'connectionTimeoutMillis' | 'allowExitOnIdle'>>;
 }
 
-export type DatabaseDescriptors = Readonly<Record<string, DatabaseDescriptor>>;
+export type DatabaseDescriptors<Databases = Record<string, unknown>> = Readonly<{
+  [Name in keyof Databases]: DatabaseDescriptor;
+}>;
 
 export type DatabaseClients<Databases> = Readonly<{
   [Name in keyof Databases]: Kysely<Databases[Name]>;
 }>;
 
 export function createDatabaseClients<Databases>(
-  descriptors: DatabaseDescriptors,
+  descriptors: DatabaseDescriptors<Databases>,
   environment: NodeJS.ProcessEnv = process.env
 ): DatabaseClients<Databases> {
-  const configured = Object.entries(descriptors).map(([name, descriptor]) => {
+  const descriptorEntries = Object.entries(descriptors) as [string, DatabaseDescriptor][];
+  const configured = descriptorEntries.map(([name, descriptor]) => {
     const connectionString = environment[descriptor.urlEnv];
     if (!connectionString) {
       throw new Error(`node-test-kit: database "${name}" requires environment variable ${descriptor.urlEnv}`);

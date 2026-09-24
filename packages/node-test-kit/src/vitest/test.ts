@@ -14,12 +14,14 @@ declare module 'vitest' {
     nodeTestKit: {
       mock: { baseUrl: string; host: string; port: number; managementUrl: string; namespaceHeader: string };
       backendUrl: string | null;
-      databases: DatabaseDescriptors;
+      databases: DatabaseDescriptors<NodeTestKitDatabases>;
     };
   }
 }
 
-interface NodeTestKitFixtures { kit: Kit<NodeTestKitDatabases> }
+export type NodeTestKit = Kit & { readonly db: DatabaseClients<NodeTestKitDatabases> };
+
+interface NodeTestKitFixtures { kit: NodeTestKit }
 interface NodeTestKitWorkerFixtures { nodeTestKitDatabases: DatabaseClients<NodeTestKitDatabases> }
 
 const extendedTest = vitestTest.extend<NodeTestKitFixtures & NodeTestKitWorkerFixtures>({
@@ -33,7 +35,7 @@ const extendedTest = vitestTest.extend<NodeTestKitFixtures & NodeTestKitWorkerFi
   }, { scope: 'worker' }],
   kit: async ({ task, nodeTestKitDatabases }, use) => {
     const run = createRunContext(task, inject('nodeTestKit'));
-    const kit = createKit(run, nodeTestKitDatabases);
+    const kit: NodeTestKit = Object.freeze({ ...createKit(run), db: nodeTestKitDatabases });
     let testError;
     try { await use(kit); } catch (error) { testError = error; }
 

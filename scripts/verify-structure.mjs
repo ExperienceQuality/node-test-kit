@@ -9,7 +9,7 @@ const expectedDependencies = new Map([
   ['rest-client', []],
   ['db', []],
   ['stub', []],
-  ['core', ['@xq/node-test-kit-rest-client', '@xq/node-test-kit-db', '@xq/node-test-kit-stub']],
+  ['core', ['@xq/node-test-kit-rest-client', '@xq/node-test-kit-stub']],
   ['node-test-kit', ['@xq/node-test-kit-core', '@xq/node-test-kit-db', '@xq/node-test-kit-stub']]
 ]);
 

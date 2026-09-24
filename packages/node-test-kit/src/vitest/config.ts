@@ -4,10 +4,11 @@ import type { DatabaseDescriptors } from '@xq/node-test-kit-db';
 import type { PactumServerOptions } from '@xq/node-test-kit-stub';
 import type { UserConfig } from 'vite';
 import { defineConfig as defineVitestConfig, type TestUserConfig } from 'vitest/config';
+import type { NodeTestKitDatabases } from './test.js';
 
 export interface KitOptions {
   application?: BackendOptions;
-  databases?: DatabaseDescriptors;
+  databases?: DatabaseDescriptors<NodeTestKitDatabases>;
   mock?: PactumServerOptions;
 }
 

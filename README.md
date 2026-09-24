@@ -119,7 +119,9 @@ test('checks an order and its reporting data', async ({ kit }) => {
 });
 ```
 
-Each configured name creates one `pg` pool and Kysely client per Vitest worker.
+The database package creates clients, while the Vitest adapter composes them into
+the public fixture; `core` remains database agnostic. Each configured name creates
+one `pg` pool and Kysely client per Vitest worker.
 Worker teardown closes every client. `defaultSchema` applies a schema to all
 unqualified queries; use Kysely's `withSchema()` when one database contains
 multiple PostgreSQL schemas.
