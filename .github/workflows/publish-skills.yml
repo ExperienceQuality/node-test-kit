@@ -1,0 +1,34 @@
+# hub-stage: publish
+name: Publish agent skills
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.agents/skills/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-agent-skills
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish agent skills
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Validate skills
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh skill publish --dry-run .agents/skills
+
+      - name: Publish skills
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh skill publish .agents/skills --tag "0.0.${GITHUB_RUN_NUMBER}"
