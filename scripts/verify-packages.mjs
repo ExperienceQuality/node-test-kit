@@ -72,7 +72,7 @@ test('loads every legacy package entrypoint from packed archives', ({ kit }) => 
   expect(root.expect).toBe(expect);
   expect(root.defineConfig).toBe(defineConfig);
   expect(kit.api).toBeDefined();
-  const orders = kit.db.get('orders') as Kysely<OrdersDatabase>;
+  const orders = kit.db.get<OrdersDatabase>('orders');
   expect(orders.selectFrom('orders').select('status').compile().sql)
     .toBe('select "status" from "sales"."orders"');
   expect(defineConfig()).toBeDefined();
