@@ -25,7 +25,7 @@ export function createDatabaseClients(
   environment: NodeJS.ProcessEnv = process.env
 ): DatabaseClients {
   const configured = Object.entries(descriptors).map(([name, descriptor]) => {
-    const connectionString = environment[descriptor.urlEnv];
+    const connectionString = environment['DATABASE_URL'] ?? descriptor.urlEnv;
     if (!connectionString) {
       throw new Error(`node-test-kit: database "${name}" requires environment variable ${descriptor.urlEnv}`);
     }
