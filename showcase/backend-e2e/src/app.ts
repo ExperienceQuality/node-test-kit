@@ -27,7 +27,7 @@ app.get('/payments', async (_request, response) => {
 
 app.post('/payments', async (request, response) => {
   const body = request.body ?? {};
-  const orderId = body.orderId ?? body.order_id;
+  const orderId = body.order_id;
   const { amount, currency, status = 'pending' } = body;
 
   if (
