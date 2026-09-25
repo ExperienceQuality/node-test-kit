@@ -13,6 +13,7 @@
     "clean": "tsc -b --clean",
     "check": "npm run verify:structure && npm run build && npm run check --workspaces --if-present",
     "test": "npm run test --workspace @xq/node-test-kit-rest-client --workspace @xq/node-test-kit-db --workspace @xq/node-test-kit-stub --workspace @xq/node-test-kit-core --workspace node-test-kit",
+    "test:e2e": "npm run test --workspace @xq/showcase-backend-e2e",
     "showcase": "npm run test --workspace @xq/showcase-backend-e2e",
     "pack": "npm run verify:packages",
     "verify:structure": "node scripts/verify-structure.mjs",
