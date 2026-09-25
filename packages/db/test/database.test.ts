@@ -24,8 +24,12 @@ describe('database clients', () => {
     await destroyDatabaseClients(clients);
   });
 
-  it('reports the database name and environment variable when configuration is missing', () => {
-    expect(() => createDatabaseClients({ analytics: { urlEnv: 'ANALYTICS_DATABASE_URL' } }, {}))
-      .toThrow('node-test-kit: database "analytics" requires environment variable ANALYTICS_DATABASE_URL');
+  it('falls back to the descriptor URL when its environment variable is missing', async () => {
+    const clients = createDatabaseClients({
+      analytics: { urlEnv: 'postgres://test:test@127.0.0.1:1/analytics' }
+    }, {});
+
+    expect(clients.get('analytics')).toBeDefined();
+    await destroyDatabaseClients(clients);
   });
 });
