@@ -9,7 +9,7 @@ Vitest-based foundation for backend functional and API E2E testing.
 - `packages/stub/` owns the PactumJS server and runtime interaction client.
 - `packages/core/` composes lifecycle, run-context, API, and stub behavior.
 - `packages/node-test-kit/` owns the stable public package and Vitest adapter.
-- `examples/backend-e2e/` exercises the packed consumer contract.
+- `showcase/backend-e2e/` exercises the packed consumer contract.
 
 `packages/rest-client/` provides a small PactumJS-backed client. It creates a
 native fluent `Spec`, injects the test namespace, and captures final request
@@ -104,8 +104,9 @@ test('checks an order and its reporting data', async ({ kit }) => {
 });
 ```
 
-`get()` returns `Kysely<any>` because each consumer owns its schemas. Cast the
-result to `Kysely<YourDatabase>` locally, or wrap lookup in an application helper.
+`get()` defaults to `Kysely<Record<string, unknown>>`; each consumer owns its
+schema. Pass `get<YourDatabase>(name)` at lookup time, or wrap lookup in an
+application helper.
 
 The database package creates clients, while the Vitest adapter composes them into
 the public fixture; `core` remains database agnostic. Each configured name creates
@@ -140,7 +141,7 @@ export default defineConfig({
 ```
 
 The demo adds a payment interaction at runtime, starts
-`examples/backend-e2e/src/dummy-api.ts`,
+`showcase/backend-e2e/src/app.ts`,
 and verifies the complete request chain:
 
 ```text

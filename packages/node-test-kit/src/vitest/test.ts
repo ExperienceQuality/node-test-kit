@@ -17,7 +17,9 @@ declare module 'vitest' {
   }
 }
 
-export type NodeTestKit = Kit & { readonly db: DatabaseClients };
+export interface NodeTestKit extends Kit {
+  readonly db: DatabaseClients;
+}
 
 interface NodeTestKitFixtures { kit: NodeTestKit }
 interface NodeTestKitWorkerFixtures { nodeTestKitDatabases: DatabaseClients }
