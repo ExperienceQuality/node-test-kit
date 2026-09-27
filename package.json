@@ -12,9 +12,12 @@
     "build": "tsc -b",
     "clean": "tsc -b --clean",
     "check": "npm run verify:structure && npm run build && npm run check --workspaces --if-present",
-    "test": "npm run test --workspace @xq/node-test-kit-rest-client --workspace @xq/node-test-kit-db --workspace @xq/node-test-kit-stub --workspace @xq/node-test-kit-core --workspace node-test-kit",
+    "test": "npm run test --workspace @xq/node-test-kit-rest-client --workspace @xq/node-test-kit-db --workspace @xq/node-test-kit-stub --workspace @xq/node-test-kit-core --workspace cy-platform --workspace @experiencequality/create-cy-platform --workspace node-test-kit",
     "test:e2e": "npm run test --workspace @xq/showcase-backend-e2e",
     "showcase": "npm run test --workspace @xq/showcase-backend-e2e",
+    "showcase:app": "npm run start --workspace @xq/showcase-backend-e2e",
+    "showcase:e2e": "cd showcase/backend-e2e && npm run e2e",
+    "scaffold:cy-platform": "bash scripts/scaffold-cy-platform.sh",
     "pack": "npm run verify:packages",
     "verify:structure": "node scripts/verify-structure.mjs",
     "verify:packages": "node scripts/verify-packages.mjs"
@@ -24,6 +27,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.0",
     "vitest": "^4.0.0"
   }

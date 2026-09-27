@@ -11,6 +11,8 @@ const packageNames = [
   '@xq/node-test-kit-db',
   '@xq/node-test-kit-stub',
   '@xq/node-test-kit-core',
+  'cy-platform',
+  '@experiencequality/create-cy-platform',
   'node-test-kit'
 ];
 const consumer = await mkdtemp(join(tmpdir(), 'node-test-kit-consumer-'));

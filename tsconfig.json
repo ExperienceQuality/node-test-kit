@@ -5,6 +5,8 @@
     { "path": "./packages/db" },
     { "path": "./packages/stub" },
     { "path": "./packages/core" },
+    { "path": "./packages/cy-platform" },
+    { "path": "./packages/create-cy-platform" },
     { "path": "./packages/node-test-kit" }
   ]
 }
