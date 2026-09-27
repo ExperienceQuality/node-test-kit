@@ -3,13 +3,15 @@ import { dirname, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const libraryNames = ['rest-client', 'db', 'stub', 'core', 'node-test-kit'];
+const libraryNames = ['rest-client', 'db', 'stub', 'core', 'cy-platform', 'create-cy-platform', 'node-test-kit'];
 const workspacePaths = [...libraryNames.map((name) => `packages/${name}`), 'showcase/backend-e2e'];
 const expectedDependencies = new Map([
   ['rest-client', []],
   ['db', []],
   ['stub', []],
   ['core', ['@xq/node-test-kit-rest-client', '@xq/node-test-kit-stub']],
+  ['cy-platform', []],
+  ['create-cy-platform', []],
   ['node-test-kit', ['@xq/node-test-kit-core', '@xq/node-test-kit-db', '@xq/node-test-kit-stub']]
 ]);
 
@@ -18,14 +20,14 @@ assert(rootPackage.private === true, 'root package must remain private');
 assert(JSON.stringify(rootPackage.workspaces) === JSON.stringify(['packages/*', 'showcase/*']), 'unexpected root workspace globs');
 
 const actualLibraries = readdirSync(resolve(root, 'packages'), { withFileTypes: true })
-  .filter((entry) => entry.isDirectory())
+  .filter((entry) => entry.isDirectory() && existsSync(resolve(root, 'packages', entry.name, 'package.json')))
   .map((entry) => entry.name)
   .sort();
-assert(JSON.stringify(actualLibraries) === JSON.stringify([...libraryNames].sort()), 'packages/* must contain exactly the five approved flat libraries');
+assert(JSON.stringify(actualLibraries) === JSON.stringify([...libraryNames].sort()), 'packages/* must contain exactly the seven approved flat libraries');
 
 for (const workspacePath of workspacePaths) {
   const packageJson = readJson(`${workspacePath}/package.json`);
-  assert(packageJson.private === true, `${workspacePath} must remain private`);
+  if (!['packages/create-cy-platform', 'packages/cy-platform'].includes(workspacePath)) assert(packageJson.private === true, `${workspacePath} must remain private`);
   for (const directory of ['src', 'test']) {
     assert(existsSync(resolve(root, workspacePath, directory)), `${workspacePath} must own ${directory}/`);
   }

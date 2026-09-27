@@ -87,7 +87,9 @@ app.use((error: unknown, _request: express.Request, response: express.Response, 
   response.status(500).json({ error: 'internal_server_error' });
 });
 
-const server = app.listen(port, '127.0.0.1');
+const server = app.listen(port, '127.0.0.1', () => {
+  console.log(`Hello`)
+});
 
 const shutdown = () => {
   server.close(() => pool.end());
