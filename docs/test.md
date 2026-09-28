@@ -1,6 +1,6 @@
-# Node test kit
+# @xq/test
 
-`node-test-kit/vitest` owns the public `test` and `expect` functions. The
+`@xq/test/vitest` owns the public `test` and `expect` functions. The
 fixture gives each test an isolated REST client, database lookup, stub
 interaction client, and run metadata.
 
@@ -19,7 +19,7 @@ interaction client, and run metadata.
 Configuration stores environment variable names, not connection strings:
 
 ```ts
-import { defineConfig } from 'node-test-kit/vitest/config';
+import { defineConfig } from '@xq/test/vitest/config';
 
 export default defineConfig({
   databases: {
@@ -62,5 +62,5 @@ expect(interaction.exercised).toBe(true);
 Available operations are `addInteraction`, `getInteraction`,
 `removeInteraction`, and `clearInteractions`. Cleanup runs after the test,
 including after failures. The application must forward the reserved
-`x-node-test-kit-namespace` header to downstream mock requests for parallel
+`x-@xq/test-namespace` header to downstream mock requests for parallel
 test isolation.

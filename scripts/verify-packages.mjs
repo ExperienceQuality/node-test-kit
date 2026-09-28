@@ -7,15 +7,14 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const artifacts = resolve(root, 'artifacts');
 const packageNames = [
-  '@xq/node-test-kit-rest-client',
-  '@xq/node-test-kit-db',
-  '@xq/node-test-kit-stub',
-  '@xq/node-test-kit-core',
-  'cy-platform',
-  '@experiencequality/create-cy-platform',
-  'node-test-kit'
+  '@xq/rest-client',
+  '@xq/db',
+  '@xq/stub',
+  '@xq/core',
+  '@xq/test-cypress',
+  '@xq/test'
 ];
-const consumer = await mkdtemp(join(tmpdir(), 'node-test-kit-consumer-'));
+const consumer = await mkdtemp(join(tmpdir(), 'xq-test-consumer-'));
 const npmCache = resolve(consumer, '.npm-cache');
 
 try {
@@ -36,7 +35,7 @@ try {
   }
 
   await writeFile(join(consumer, 'package.json'), `${JSON.stringify({
-    name: 'node-test-kit-package-smoke',
+    name: 'xq-test-package-smoke',
     version: '0.0.0',
     private: true,
     type: 'module'
@@ -53,23 +52,23 @@ try {
     include: ['vitest.config.ts', 'test/**/*.ts']
   }, null, 2)}\n`);
   await mkdir(join(consumer, 'test'), { recursive: true });
-  await writeFile(join(consumer, 'vitest.config.ts'), `import { defineConfig } from 'node-test-kit/vitest/config';
+  await writeFile(join(consumer, 'vitest.config.ts'), `import { defineConfig } from '@xq/test/vitest/config';
 
 export default defineConfig({
   databases: { orders: { urlEnv: 'PACKAGE_SMOKE_DATABASE_URL', defaultSchema: 'sales' } },
   test: { include: ['test/**/*.test.ts'] }
 });
 `);
-  await writeFile(join(consumer, 'test', 'legacy-imports.test.ts'), `import * as root from 'node-test-kit';
-import type { Kysely } from '@xq/node-test-kit-db';
-import { expect, test } from 'node-test-kit/vitest';
-import { defineConfig } from 'node-test-kit/vitest/config';
+  await writeFile(join(consumer, 'test', 'package-imports.test.ts'), `import * as root from '@xq/test';
+import type { Kysely } from '@xq/db';
+import { expect, test } from '@xq/test/vitest';
+import { defineConfig } from '@xq/test/vitest/config';
 
 interface OrdersDatabase {
   orders: { id: number; status: string };
 }
 
-test('loads every legacy package entrypoint from packed archives', ({ kit }) => {
+test('loads every public package entrypoint from packed archives', ({ kit }) => {
   expect(root.test).toBe(test);
   expect(root.expect).toBe(expect);
   expect(root.defineConfig).toBe(defineConfig);

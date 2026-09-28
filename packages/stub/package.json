@@ -1,5 +1,5 @@
 {
-  "name": "@xq/node-test-kit-stub",
+  "name": "@xq/stub",
   "version": "0.1.0",
   "private": true,
   "type": "module",

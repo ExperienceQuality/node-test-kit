@@ -24,8 +24,8 @@ are validation only; they do not publish packages.
 
 Public release packages are:
 
-- `cy-platform`
-- `@experiencequality/create-cy-platform`
+- `@xq/test`
+- `@xq/test-cypress`
 
 Publish only after the version, changelog, package contents, and release tag
 have been reviewed.

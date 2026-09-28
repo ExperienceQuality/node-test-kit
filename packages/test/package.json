@@ -1,5 +1,5 @@
 {
-  "name": "node-test-kit",
+  "name": "@xq/test",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -27,9 +27,9 @@
   },
   "engines": { "node": ">=24" },
   "dependencies": {
-    "@xq/node-test-kit-core": "0.1.0",
-    "@xq/node-test-kit-db": "0.1.0",
-    "@xq/node-test-kit-stub": "0.1.0"
+    "@xq/core": "0.1.0",
+    "@xq/db": "0.1.0",
+    "@xq/stub": "0.1.0"
   },
   "peerDependencies": { "vitest": "^4.0.0" },
   "files": ["dist", "README.md", "package.json"]

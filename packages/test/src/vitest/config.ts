@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
-import type { BackendOptions } from '@xq/node-test-kit-core';
-import type { DatabaseOptions } from '@xq/node-test-kit-db';
-import type { PactumServerOptions } from '@xq/node-test-kit-stub';
+import type { BackendOptions } from '@xq/core';
+import type { DatabaseOptions } from '@xq/db';
+import type { PactumServerOptions } from '@xq/stub';
 import type { UserConfig } from 'vite';
 import { defineConfig as defineVitestConfig, type TestUserConfig } from 'vitest/config';
 

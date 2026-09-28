@@ -1,5 +1,5 @@
 {
-  "name": "@xq/node-test-kit-db",
+  "name": "@xq/db",
   "version": "0.1.0",
   "private": true,
   "type": "module",

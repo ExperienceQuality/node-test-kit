@@ -1,5 +1,5 @@
-import { startBackend } from '@xq/node-test-kit-core';
-import { startPactumServer } from '@xq/node-test-kit-stub';
+import { startBackend } from '@xq/core';
+import { startPactumServer } from '@xq/stub';
 import type { KitOptions } from './config.js';
 
 interface GlobalSetupProject {
