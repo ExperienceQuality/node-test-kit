@@ -1,4 +1,4 @@
-import { expect, test} from 'node-test-kit/vitest';
+import { expect, test} from '@xq/test/vitest';
 import {lte} from 'pactum-matchers'
 
 type TestDatabase = {

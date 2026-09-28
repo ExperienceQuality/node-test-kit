@@ -1,5 +1,5 @@
 {
-  "name": "cy-platform",
+  "name": "@xq/test-cypress",
   "version": "0.1.0",
   "private": false,
   "type": "module",

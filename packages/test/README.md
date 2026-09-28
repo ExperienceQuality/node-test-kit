@@ -1,11 +1,11 @@
-# node-test-kit
+# @xq/test
 
 Vitest-based foundation for backend functional and API E2E testing.
 
-Use `defineConfig` from `node-test-kit/vitest/config`, and import the platform-owned `test` and `expect` from `node-test-kit/vitest`.
+Use `defineConfig` from `@xq/test/vitest/config`, and import the platform-owned `test` and `expect` from `@xq/test/vitest`.
 
 ```ts
-import { defineConfig } from 'node-test-kit/vitest/config';
+import { defineConfig } from '@xq/test/vitest/config';
 
 export default defineConfig({
   application: { url: 'http://127.0.0.1:4000/health' },
@@ -16,8 +16,8 @@ export default defineConfig({
 ```
 
 ```ts
-import type { Kysely } from '@xq/node-test-kit-db';
-import { expect, test } from 'node-test-kit/vitest';
+import type { Kysely } from '@xq/db';
+import { expect, test } from '@xq/test/vitest';
 
 interface PrimaryDatabase {
   users: { id: number; email: string };

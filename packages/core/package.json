@@ -1,5 +1,5 @@
 {
-  "name": "@xq/node-test-kit-core",
+  "name": "@xq/core",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -16,8 +16,8 @@
   },
   "engines": { "node": ">=24" },
   "dependencies": {
-    "@xq/node-test-kit-rest-client": "0.1.0",
-    "@xq/node-test-kit-stub": "0.1.0"
+    "@xq/rest-client": "0.1.0",
+    "@xq/stub": "0.1.0"
   },
   "files": ["dist", "package.json"]
 }

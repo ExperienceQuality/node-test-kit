@@ -1,13 +1,13 @@
-# cy-platform
+# @xq/test-cypress
 
 Platform-owned Cypress bundle. One browser import installs platform commands and plugins. One Node entrypoint installs Cypress run hooks.
 
 ## Why this package exists
 
-Projects should not each choose plugin versions, register commands differently, or copy platform test setup. `cy-platform` centralizes that contract:
+Projects should not each choose plugin versions, register commands differently, or copy platform test setup. `@xq/test-cypress` centralizes that contract:
 
-- `cy-platform`: browser-side plugins and commands
-- `cy-platform/node`: Node-side Cypress lifecycle hooks
+- `@xq/test-cypress`: browser-side plugins and commands
+- `@xq/test-cypress/node`: Node-side Cypress lifecycle hooks
 - one place to upgrade plugin versions and shared behavior
 
 ## Browser usage
@@ -15,14 +15,14 @@ Projects should not each choose plugin versions, register commands differently, 
 Add package to a Cypress project:
 
 ```bash
-npm install --save-dev cy-platform cypress
+npm install --save-dev @xq/test-cypress cypress
 ```
 
 Import once from the testing-type support file:
 
 ```ts
 // cypress/support/e2e.ts
-import 'cy-platform';
+import '@xq/test-cypress';
 ```
 
 Cypress loads support code before every spec. The root entrypoint therefore installs browser commands for every spec without requiring imports in individual test files.
@@ -52,7 +52,7 @@ Node hooks belong in `cypress.config.ts`, not the browser support file:
 
 ```ts
 import { defineConfig } from 'cypress';
-import { setupPlatform } from 'cy-platform/node';
+import { setupPlatform } from '@xq/test-cypress/node';
 
 export default defineConfig({
   e2e: {
@@ -63,7 +63,7 @@ export default defineConfig({
 });
 ```
 
-`cy-platform/node` currently registers the platform `before:run` hook. Add `after:run`, `before:spec`, or `after:spec` behavior in `src/setup.ts` when platform needs it. Node hooks cannot call `cy` commands.
+`@xq/test-cypress/node` currently registers the platform `before:run` hook. Add `after:run`, `before:spec`, or `after:spec` behavior in `src/setup.ts` when platform needs it. Node hooks cannot call `cy` commands.
 
 ## Source map
 
@@ -73,7 +73,7 @@ export default defineConfig({
 | `src/commands/rest.ts` | Runtime `cy.rest()` command | Adds platform request behavior | Parses arguments, calls `cy.api()`, optionally aliases response body |
 | `src/rest/types.ts` | `RestArgs`, `RestCommandArgs`, Cypress augmentation | Gives consumers autocomplete and compile-time checking | Extends `Cypress.Chainable` with `rest()` |
 | `src/rest/parse.ts` | Pure argument parser | Keeps request parsing independent from Cypress runtime | Distinguishes optional alias from URL, method, or options |
-| `src/node.ts` | Node public entrypoint | Separates Node imports from browser imports | Re-exports `setupPlatform` through `cy-platform/node` |
+| `src/node.ts` | Node public entrypoint | Separates Node imports from browser imports | Re-exports `setupPlatform` through `@xq/test-cypress/node` |
 | `src/setup.ts` | Node event registration | Centralizes run-level platform hooks | Receives Cypress `on` and `config`, registers events, returns config |
 | `test/rest-command.test.ts` | Runtime command tests | Proves registration, forwarding, and alias behavior | Stubs Cypress globals and imports command module |
 | `tsconfig.json` | Production build config | Emits package JavaScript and declarations | Includes only `src/`, writes to `dist/` |
@@ -87,7 +87,7 @@ export default defineConfig({
 - Cypress plugins used at runtime belong in `dependencies`.
 - Build and test tools belong in `devDependencies`.
 - Browser entrypoint must not import Node-only modules such as `fs` or database drivers.
-- Node plugins must be exposed through a separate subpath such as `cy-platform/node`.
+- Node plugins must be exposed through a separate subpath such as `@xq/test-cypress/node`.
 
 ## Add a browser plugin or command
 
@@ -109,7 +109,7 @@ export default defineConfig({
 ## Verify
 
 ```bash
-npm run build --workspace cy-platform
-npm run check --workspace cy-platform
-npm test --workspace cy-platform
+npm run build --workspace @xq/test-cypress
+npm run check --workspace @xq/test-cypress
+npm test --workspace @xq/test-cypress
 ```
