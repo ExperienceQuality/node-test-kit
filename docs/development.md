@@ -22,10 +22,9 @@ npm run verify:packages
 Build output goes to each package's ignored `dist/` directory. Archive checks
 are validation only; they do not publish packages.
 
-Public release packages are:
+Public release package is:
 
 - `@xq/test`
-- `@xq/test-cypress`
 
 Publish only after the version, changelog, package contents, and release tag
 have been reviewed.

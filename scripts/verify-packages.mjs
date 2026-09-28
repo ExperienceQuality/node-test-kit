@@ -11,7 +11,6 @@ const packageNames = [
   '@xq/db',
   '@xq/stub',
   '@xq/core',
-  '@experiencequality/test-cypress',
   '@xq/test'
 ];
 const consumer = await mkdtemp(join(tmpdir(), 'xq-test-consumer-'));

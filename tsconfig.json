@@ -5,7 +5,6 @@
     { "path": "./packages/db" },
     { "path": "./packages/stub" },
     { "path": "./packages/core" },
-    { "path": "./packages/test-cypress" },
     { "path": "./packages/test" }
   ]
 }
