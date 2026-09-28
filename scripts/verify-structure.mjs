@@ -3,14 +3,13 @@ import { dirname, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const libraryNames = ['rest-client', 'db', 'stub', 'core', 'test-cypress', 'test'];
+const libraryNames = ['rest-client', 'db', 'stub', 'core', 'test'];
 const workspacePaths = [...libraryNames.map((name) => `packages/${name}`), 'showcase/backend-e2e'];
 const expectedDependencies = new Map([
   ['rest-client', []],
   ['db', []],
   ['stub', []],
   ['core', ['@xq/rest-client', '@xq/stub']],
-  ['test-cypress', []],
   ['test', ['@xq/core', '@xq/db', '@xq/stub']]
 ]);
 
@@ -22,11 +21,11 @@ const actualLibraries = readdirSync(resolve(root, 'packages'), { withFileTypes: 
   .filter((entry) => entry.isDirectory() && existsSync(resolve(root, 'packages', entry.name, 'package.json')))
   .map((entry) => entry.name)
   .sort();
-assert(JSON.stringify(actualLibraries) === JSON.stringify([...libraryNames].sort()), 'packages/* must contain exactly the six approved flat libraries');
+assert(JSON.stringify(actualLibraries) === JSON.stringify([...libraryNames].sort()), 'packages/* must contain exactly the five approved flat libraries');
 
 for (const workspacePath of workspacePaths) {
   const packageJson = readJson(`${workspacePath}/package.json`);
-  if (!['packages/test-cypress'].includes(workspacePath)) assert(packageJson.private === true, `${workspacePath} must remain private`);
+  assert(packageJson.private === true, `${workspacePath} must remain private`);
   for (const directory of ['src', 'test']) {
     assert(existsSync(resolve(root, workspacePath, directory)), `${workspacePath} must own ${directory}/`);
   }

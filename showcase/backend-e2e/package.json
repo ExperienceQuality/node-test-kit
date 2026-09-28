@@ -6,9 +6,7 @@
   "scripts": {
     "check": "tsc -p tsconfig.json --noEmit",
     "start": "npx tsx ./src/app.ts",
-    "test": "DATABASE_URL=postgres://test:test@127.0.0.1:5432/backend_e2e vitest run",
-    "e2e": "cypress open",
-    "e2e:run": "cypress run --browser chromium --spec 'cypress/e2e/api/**/*.cy.ts'"
+    "test": "DATABASE_URL=postgres://test:test@127.0.0.1:5432/backend_e2e vitest run"
   },
   "engines": {
     "node": ">=24"
@@ -21,8 +19,6 @@
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/pg": "^8.15.5",
-    "@experiencequality/test-cypress": "0.1.0",
-    "cypress": "^16.1.0",
     "vitest": "^4.0.0"
   }
 }
