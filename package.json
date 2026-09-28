@@ -19,7 +19,10 @@
     "showcase:e2e": "cd showcase/backend-e2e && npm run e2e",
     "pack": "npm run verify:packages",
     "verify:structure": "node scripts/verify-structure.mjs",
-    "verify:packages": "node scripts/verify-packages.mjs"
+    "verify:packages": "node scripts/verify-packages.mjs",
+    "ci:build": "npm run verify:structure && npm run verify:packages",
+    "ci:test": "node scripts/ci-test.mjs",
+    "ci:release": "node scripts/ci-test.mjs"
   },
   "engines": {
     "node": ">=24"
