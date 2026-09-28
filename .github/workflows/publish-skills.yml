@@ -1,4 +1,3 @@
-# hub-stage: publish
 name: Publish agent skills
 
 on:
