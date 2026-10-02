@@ -17,6 +17,30 @@
       "types": "./dist/vitest/config.d.ts",
       "import": "./dist/vitest/config.js"
     },
+    "./cucumber": {
+      "types": "./dist/cucumber/index.d.ts",
+      "import": "./dist/cucumber/index.js"
+    },
+    "./cucumber/config": {
+      "types": "./dist/cucumber/config.d.ts",
+      "import": "./dist/cucumber/config.js"
+    },
+    "./cucumber/register": {
+      "types": "./dist/cucumber/register.d.ts",
+      "import": "./dist/cucumber/register.js"
+    },
+    "./cucumber/bootstrap": {
+      "types": "./dist/cucumber/bootstrap.d.ts",
+      "import": "./dist/cucumber/bootstrap.js"
+    },
+    "./cucumber/plugin": {
+      "types": "./dist/cucumber/plugin.d.ts",
+      "import": "./dist/cucumber/plugin.js"
+    },
+    "./cucumber/json": {
+      "types": "./dist/cucumber/json.d.ts",
+      "import": "./dist/cucumber/json.js"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {
@@ -29,8 +53,16 @@
   "dependencies": {
     "@xq/core": "0.1.0",
     "@xq/db": "0.1.0",
-    "@xq/stub": "0.1.0"
+    "@xq/stub": "0.1.0",
+    "tsx": "^4.23.15"
   },
-  "peerDependencies": { "vitest": "^4.0.0" },
+  "peerDependencies": {
+    "@cucumber/cucumber": ">=13.2.1 <14",
+    "vitest": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@cucumber/cucumber": { "optional": true },
+    "vitest": { "optional": true }
+  },
   "files": ["dist", "README.md", "package.json"]
 }

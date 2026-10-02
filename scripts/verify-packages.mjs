@@ -1,4 +1,5 @@
-import { mkdtemp, mkdir, readdir, rm, writeFile } from 'node:fs/promises';
+import assert from 'node:assert/strict';
+import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -78,6 +79,40 @@ test('loads every public package entrypoint from packed archives', ({ kit }) => 
   expect(defineConfig()).toBeDefined();
 });
 `);
+  await mkdir(join(consumer, 'features/steps'), { recursive: true });
+  await writeFile(join(consumer, 'cucumber.mjs'), `import { defineCucumberConfig } from '@xq/test/cucumber/config';
+
+export default defineCucumberConfig({ steps: 'features/steps/**/*.ts' });
+`);
+  await writeFile(join(consumer, 'features/order.feature'), `Feature: Packed Cucumber consumer
+
+  @smoke
+  Scenario: compose nested JSON
+    Given a fresh company scenario context
+    When I compose this body:
+      | customer.id | items[0].sku |
+      | "cust-123"  | "SKU-1"      |
+    Then the body contains the nested customer
+`);
+  await writeFile(join(consumer, 'features/steps/order.steps.ts'), `import assert from 'node:assert/strict';
+import { Given, Then, When, type DataTable } from '@cucumber/cucumber';
+import { composeJsonTable, type XqWorld } from '@xq/test/cucumber';
+
+type OrderWorld = XqWorld & { body?: unknown };
+
+Given('a fresh company scenario context', function (this: XqWorld) {
+  assert.ok(this.run.id);
+  assert.ok(this.api);
+});
+
+When('I compose this body:', function (this: OrderWorld, table: DataTable) {
+  this.body = composeJsonTable(table);
+});
+
+Then('the body contains the nested customer', function (this: OrderWorld) {
+  assert.deepEqual(this.body, { customer: { id: 'cust-123' }, items: [{ sku: 'SKU-1' }] });
+});
+`);
 
   run('npm', [
     'install',
@@ -85,6 +120,7 @@ test('loads every public package entrypoint from packed archives', ({ kit }) => 
     '--no-audit',
     '--no-fund',
     ...archives,
+    '@cucumber/cucumber@^13.2.1',
     'vitest@^4.0.0',
     'typescript@^5.9.0',
     '@types/node@^24.0.0'
@@ -93,8 +129,17 @@ test('loads every public package entrypoint from packed archives', ({ kit }) => 
   run(resolve(consumer, 'node_modules/.bin/vitest'), ['run', '--config', 'vitest.config.ts'], consumer, {
     PACKAGE_SMOKE_DATABASE_URL: 'postgres://test:test@127.0.0.1:1/test'
   });
+  const cucumberEvents = join(consumer, 'cucumber-events.ndjson');
+  run(resolve(consumer, 'node_modules/.bin/cucumber-js'), ['--tags', '@smoke'], consumer, {
+    XQ_TEST_BASE_URL: 'http://127.0.0.1:4000',
+    XQ_CUCUMBER_EVENTS_FILE: cucumberEvents
+  });
+  const events = (await readFile(cucumberEvents, 'utf8')).trim().split('\n').map((line) => JSON.parse(line));
+  assert.deepEqual(events.map((event) => event.event), ['scenario.started', 'scenario.finished']);
+  assert.equal(events[0].name, 'compose nested JSON');
+  assert.equal(events[1].status, 'PASSED');
 
-  console.log(`verified ${archives.length} archives in a fresh NodeNext/Vitest consumer`);
+  console.log(`verified ${archives.length} archives in fresh NodeNext/Vitest and Cucumber consumers`);
 } finally {
   await rm(consumer, { recursive: true, force: true });
 }
