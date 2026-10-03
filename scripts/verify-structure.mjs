@@ -4,14 +4,14 @@ import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const libraryNames = ['rest-client', 'db', 'stub', 'core', 'test'];
-const publicPackageNames = new Set(libraryNames.map((name) => `@xq/${name}`));
+const publicPackageNames = new Set(libraryNames.map((name) => `@experiencequality/${name}`));
 const workspacePaths = [...libraryNames.map((name) => `packages/${name}`), 'showcase/backend-e2e'];
 const expectedDependencies = new Map([
   ['rest-client', []],
   ['db', []],
   ['stub', []],
-  ['core', ['@xq/rest-client', '@xq/stub']],
-  ['test', ['@xq/core', '@xq/db', '@xq/stub']]
+  ['core', ['@experiencequality/rest-client', '@experiencequality/stub']],
+  ['test', ['@experiencequality/core', '@experiencequality/db', '@experiencequality/stub']]
 ]);
 
 const rootPackage = readJson('package.json');
@@ -41,7 +41,7 @@ for (const workspacePath of workspacePaths) {
 for (const name of libraryNames) {
   const workspacePath = `packages/${name}`;
   const packageJson = readJson(`${workspacePath}/package.json`);
-  const internalDependencies = Object.keys(packageJson.dependencies ?? {}).filter((dependency) => ['@xq/core', '@xq/db', '@xq/rest-client', '@xq/stub'].includes(dependency));
+  const internalDependencies = Object.keys(packageJson.dependencies ?? {}).filter((dependency) => ['@experiencequality/core', '@experiencequality/db', '@experiencequality/rest-client', '@experiencequality/stub'].includes(dependency));
   assert(
     JSON.stringify(internalDependencies.sort()) === JSON.stringify(expectedDependencies.get(name).sort()),
     `${workspacePath} has an unexpected internal dependency boundary`
@@ -70,10 +70,10 @@ const expectedExports = {
   './cucumber/json': { types: './dist/cucumber/json.d.ts', import: './dist/cucumber/json.js' },
   './package.json': './package.json'
 };
-assert(JSON.stringify(facade.exports) === JSON.stringify(expectedExports), '@xq/test exports changed');
-assert(facade.peerDependencies?.vitest === '^4.0.0', '@xq/test must expose its Vitest peer requirement');
-assert(facade.peerDependencies?.['@cucumber/cucumber'] === '>=13.2.1 <14', '@xq/test must expose its Cucumber peer requirement');
-assert(facade.peerDependenciesMeta?.['@cucumber/cucumber']?.optional === true, '@xq/test Cucumber peer must remain optional');
+assert(JSON.stringify(facade.exports) === JSON.stringify(expectedExports), '@experiencequality/test exports changed');
+assert(facade.peerDependencies?.vitest === '^4.0.0', '@experiencequality/test must expose its Vitest peer requirement');
+assert(facade.peerDependencies?.['@cucumber/cucumber'] === '>=13.2.1 <14', '@experiencequality/test must expose its Cucumber peer requirement');
+assert(facade.peerDependenciesMeta?.['@cucumber/cucumber']?.optional === true, '@experiencequality/test Cucumber peer must remain optional');
 
 for (const legacyRoot of ['src', 'test', 'demo']) {
   assert(filesUnder(resolve(root, legacyRoot)).length === 0, `legacy root ${legacyRoot}/ still owns files`);

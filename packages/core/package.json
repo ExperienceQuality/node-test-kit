@@ -1,5 +1,5 @@
 {
-  "name": "@xq/core",
+  "name": "@experiencequality/core",
   "version": "1.0.0",
   "publishConfig": { "registry": "https://npm.pkg.github.com" },
   "type": "module",
@@ -18,8 +18,8 @@
     "node": ">=24"
   },
   "dependencies": {
-    "@xq/rest-client": "1.0.0",
-    "@xq/stub": "1.0.0"
+    "@experiencequality/rest-client": "1.0.0",
+    "@experiencequality/stub": "1.0.0"
   },
   "files": [
     "dist",

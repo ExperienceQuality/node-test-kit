@@ -1,11 +1,11 @@
-# @xq/test
+# @experiencequality/test
 
 Vitest-based foundation for backend functional and API E2E testing.
 
-Use `defineConfig` from `@xq/test/vitest/config`, and import the platform-owned `test` and `expect` from `@xq/test/vitest`.
+Use `defineConfig` from `@experiencequality/test/vitest/config`, and import the platform-owned `test` and `expect` from `@experiencequality/test/vitest`.
 
 ```ts
-import { defineConfig } from '@xq/test/vitest/config';
+import { defineConfig } from '@experiencequality/test/vitest/config';
 
 export default defineConfig({
   application: { url: 'http://127.0.0.1:4000/health' },
@@ -16,8 +16,8 @@ export default defineConfig({
 ```
 
 ```ts
-import type { Kysely } from '@xq/db';
-import { expect, test } from '@xq/test/vitest';
+import type { Kysely } from '@experiencequality/db';
+import { expect, test } from '@experiencequality/test/vitest';
 
 interface PrimaryDatabase {
   users: { id: number; email: string };
@@ -36,13 +36,13 @@ closed during worker teardown. Consumers own migrations and test-data cleanup.
 
 ## Cucumber
 
-`@xq/test` also provides an optional Cucumber integration. Install a compatible
+`@experiencequality/test` also provides an optional Cucumber integration. Install a compatible
 `@cucumber/cucumber` peer in the application, then keep the project's Cucumber
 configuration small:
 
 ```js
 // cucumber.mjs
-import { defineCucumberConfig } from '@xq/test/cucumber/config';
+import { defineCucumberConfig } from '@experiencequality/test/cucumber/config';
 
 export default defineCucumberConfig({
   steps: 'features/steps/**/*.ts'
@@ -71,7 +71,7 @@ When I submit this order:
 
 ```ts
 import { When, type DataTable } from '@cucumber/cucumber';
-import { composeJsonTable, type XqWorld } from '@xq/test/cucumber';
+import { composeJsonTable, type XqWorld } from '@experiencequality/test/cucumber';
 
 When('I submit this order:', async function (this: XqWorld, table: DataTable) {
   const body = composeJsonTable(table);

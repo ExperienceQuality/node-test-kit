@@ -1,10 +1,10 @@
-import { createKit, createRunContext, type Kit } from '@xq/core';
+import { createKit, createRunContext, type Kit } from '@experiencequality/core';
 import {
   createDatabaseClients,
   destroyDatabaseClients,
   type DatabaseClients,
   type DatabaseOptions
-} from '@xq/db';
+} from '@experiencequality/db';
 import { expect as vitestExpect, inject, test as vitestTest, type TestAPI } from 'vitest';
 
 declare module 'vitest' {

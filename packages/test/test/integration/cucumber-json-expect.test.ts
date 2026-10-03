@@ -1,7 +1,7 @@
 import type { DataTable } from '@cucumber/cucumber';
 import { createServer } from 'node:http';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createRestClient } from '@xq/rest-client';
+import { createRestClient } from '@experiencequality/rest-client';
 import { assertJsonTable, expectJsonTable, registerJsonTableExpectation, type JsonTableResponse } from '../../src/cucumber/json-expect.js';
 
 let baseUrl: string;

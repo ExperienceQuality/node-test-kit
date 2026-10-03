@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { sql, type Generated, type Kysely } from '@xq/db';
+import { sql, type Generated, type Kysely } from '@experiencequality/db';
 import { expect, test } from '../../src/vitest/test.js';
 
 interface ProbeTable {

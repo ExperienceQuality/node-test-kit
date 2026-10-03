@@ -16,6 +16,6 @@ export function defineCucumberConfig(project: CucumberProjectConfig): Pick<IConf
       fileURLToPath(new URL('./bootstrap.js', import.meta.url)),
       ...steps
     ],
-    plugin: ['@xq/test/cucumber/plugin']
+    plugin: ['@experiencequality/test/cucumber/plugin']
   };
 }

@@ -86,7 +86,7 @@ DATABASE_URL=postgresql://test:test@127.0.0.1:5432/backend_e2e \
 - `GET /health` returns `{ "status": "ok" }`.
 - `GET /payments` lists payments from PostgreSQL.
 - `POST /payments` creates a payment. Amount uses minor currency units.
-- `POST /orders` demonstrates an order calling the `@xq/test` payment stub.
+- `POST /orders` demonstrates an order calling the `@experiencequality/test` payment stub.
 
 Example payment request:
 

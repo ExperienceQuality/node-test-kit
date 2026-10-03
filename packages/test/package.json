@@ -1,5 +1,5 @@
 {
-  "name": "@xq/test",
+  "name": "@experiencequality/test",
   "version": "1.0.0",
   "publishConfig": { "registry": "https://npm.pkg.github.com" },
   "type": "module",
@@ -53,9 +53,9 @@
     "node": ">=24"
   },
   "dependencies": {
-    "@xq/core": "1.0.0",
-    "@xq/db": "1.0.0",
-    "@xq/stub": "1.0.0",
+    "@experiencequality/core": "1.0.0",
+    "@experiencequality/db": "1.0.0",
+    "@experiencequality/stub": "1.0.0",
     "pactum": "^3.9.1",
     "tsx": "^4.23.15"
   },

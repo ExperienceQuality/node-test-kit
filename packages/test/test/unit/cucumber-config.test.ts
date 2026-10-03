@@ -11,7 +11,7 @@ describe('defineCucumberConfig', () => {
         fileURLToPath(new URL('../../src/cucumber/bootstrap.js', import.meta.url)),
         'features/steps/**/*.ts'
       ],
-      plugin: ['@xq/test/cucumber/plugin']
+      plugin: ['@experiencequality/test/cucumber/plugin']
     });
   });
 
