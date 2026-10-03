@@ -41,3 +41,5 @@ test('uses the platform-owned kit fixture', async ({ kit }) => {
   console.log(kit.rest, kit.stub, kit.run);
 });
 ```
+
+Complete API reference with consumer examples: [docs/api.md](docs/api.md).
