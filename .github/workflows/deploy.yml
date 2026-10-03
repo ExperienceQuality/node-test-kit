@@ -42,7 +42,9 @@ jobs:
   publish:
     needs: [route, build, test]
     uses: ./.github/workflows/publish.yml
-    secrets: inherit
+    permissions:
+      contents: read
+      packages: write
 
   release:
     needs: [route, build, test, publish]
@@ -62,4 +64,4 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --verify-tag \
             --generate-notes \
-            --notes "@xq/test platform release ${VERSION}; published packages: @xq/rest-client, @xq/db, @xq/stub, @xq/core, @xq/test."
+            --notes "@xq/test platform release ${VERSION}; published to the company GitHub Packages npm registry."

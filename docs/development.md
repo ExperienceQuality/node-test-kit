@@ -22,7 +22,7 @@ npm run verify:packages
 Build output goes to each package's ignored `dist/` directory. Archive checks
 are validation only; they do not publish packages.
 
-The public release packages are:
+The internal release packages are:
 
 - `@xq/rest-client`
 - `@xq/db`
@@ -30,8 +30,8 @@ The public release packages are:
 - `@xq/core`
 - `@xq/test`
 
-The root workspace and showcase remain private. Release all five public
-packages at the same version so exact internal dependencies resolve correctly.
-Configure the repository `NPM_TOKEN` secret and push a `vMAJOR.MINOR.PATCH`
-tag from `main`; the release workflow runs build, test, publish, and GitHub
-Release stages in order.
+The root workspace and showcase remain private. Release all five internal
+packages at the same version so exact dependencies resolve correctly. Packages
+are published to the company GitHub Packages npm registry, not the public npm
+registry. The release workflow uses the repository `GITHUB_TOKEN`; push a
+`vMAJOR.MINOR.PATCH` tag from `main` after the release PR is merged.

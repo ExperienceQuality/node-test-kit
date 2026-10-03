@@ -1,7 +1,7 @@
 {
   "name": "@xq/test",
   "version": "1.0.0",
-  "publishConfig": { "access": "public" },
+  "publishConfig": { "registry": "https://npm.pkg.github.com" },
   "type": "module",
   "description": "A platform-owned Vitest foundation for backend functional E2E tests.",
   "exports": {

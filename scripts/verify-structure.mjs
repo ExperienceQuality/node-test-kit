@@ -29,7 +29,7 @@ for (const workspacePath of workspacePaths) {
   if (workspacePath.startsWith('packages/')) {
     assert(packageJson.private !== true, `${workspacePath} must be publishable`);
     assert(publicPackageNames.has(packageJson.name), `${workspacePath} has an unexpected public package name`);
-    assert(packageJson.publishConfig?.access === 'public', `${workspacePath} must publish with public access`);
+    assert(packageJson.publishConfig?.registry === 'https://npm.pkg.github.com', `${workspacePath} must publish to the company npm registry`);
   } else {
     assert(packageJson.private === true, `${workspacePath} must remain private`);
   }

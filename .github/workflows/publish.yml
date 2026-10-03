@@ -3,12 +3,10 @@ name: Publish Node packages
 
 on:
   workflow_call:
-    secrets:
-      NPM_TOKEN:
-        required: true
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
   publish:
@@ -26,7 +24,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: 'https://npm.pkg.github.com'
           cache: npm
 
       - name: Install exact dependencies
@@ -37,10 +35,10 @@ jobs:
 
       - name: Publish public packages
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ github.token }}
         run: |
-          npm publish --workspace @xq/rest-client --access public
-          npm publish --workspace @xq/db --access public
-          npm publish --workspace @xq/stub --access public
-          npm publish --workspace @xq/core --access public
-          npm publish --workspace @xq/test --access public
+          npm publish --workspace @xq/rest-client
+          npm publish --workspace @xq/db
+          npm publish --workspace @xq/stub
+          npm publish --workspace @xq/core
+          npm publish --workspace @xq/test

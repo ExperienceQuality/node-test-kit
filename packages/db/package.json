@@ -1,7 +1,7 @@
 {
   "name": "@xq/db",
   "version": "1.0.0",
-  "publishConfig": { "access": "public" },
+  "publishConfig": { "registry": "https://npm.pkg.github.com" },
   "type": "module",
   "exports": {
     ".": {
