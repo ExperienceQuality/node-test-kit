@@ -10,6 +10,7 @@ focused documents:
 | --- | --- |
 | What this project delivers | [docs/deliverables.md](docs/deliverables.md) |
 | Node/Vitest test facade usage | [docs/test.md](docs/test.md) |
+| Node Cucumber consumer guide | [docs/consumer-guide.md](docs/consumer-guide.md) |
 | TypeScript development and release checks | [docs/development.md](docs/development.md) |
 | Node test package internals | [packages/test/README.md](packages/test/README.md) |
 
