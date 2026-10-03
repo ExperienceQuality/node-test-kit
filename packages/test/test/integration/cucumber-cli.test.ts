@@ -63,7 +63,7 @@ describe('native cucumber-js consumer', () => {
         XQ_TEST_BASE_URL: api.baseUrl,
         XQ_CUCUMBER_EVENTS_FILE: eventFile
       });
-      expect(result.status, result.stderr).toBe(0);
+      expect(result.status, `${result.stderr}\n${result.stdout}`).toBe(0);
       expect(result.stdout).toContain('2 scenarios (2 passed)');
       const events = (await readFile(eventFile, 'utf8')).trim().split('\n').map((line) => JSON.parse(line));
       const started = events.filter((event) => event.event === 'scenario.started');
@@ -74,6 +74,42 @@ describe('native cucumber-js consumer', () => {
       expect(finished.every((event) => event.status === 'PASSED')).toBe(true);
       expect(api.namespaces).toHaveLength(2);
       expect(new Set(api.namespaces).size).toBe(2);
+    } finally {
+      await api.close();
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it('supports builder and path-scoped table assertions without repeating the request', async () => {
+    const api = await startApiServer();
+    try {
+      const result = await runCucumber(['--tags', '@json-assertion'], { XQ_TEST_BASE_URL: api.baseUrl });
+      expect(result.status, `${result.stderr}\n${result.stdout}`).toBe(0);
+      expect(result.stdout).toContain('2 scenarios (2 passed)');
+      expect(api.orderRequests).toBe(2);
+    } finally {
+      await api.close();
+    }
+  });
+
+  it('redacts expected and actual sentinels from Cucumber failure output and lifecycle events', async () => {
+    const directory = await mkdtemp(resolve(tmpdir(), 'xq-cucumber-redaction-'));
+    const eventFile = resolve(directory, 'events.ndjson');
+    const api = await startApiServer();
+    try {
+      const result = await runCucumber(['--tags', '@redaction-failure'], {
+        XQ_TEST_BASE_URL: api.baseUrl,
+        XQ_CUCUMBER_EVENTS_FILE: eventFile,
+        XQ_EXPECTED_SECRET: 'expected-secret-sentinel'
+      });
+      expect(result.status).not.toBe(0);
+      const output = `${result.stdout}\n${result.stderr}`;
+      expect(output).not.toContain('actual-secret-sentinel');
+      expect(output).not.toContain('expected-secret-sentinel');
+      expect(output).toContain('JSON exact assertion failed');
+      const events = (await readFile(eventFile, 'utf8')).trim().split('\n').map((line) => line);
+      expect(events.join('\n')).not.toContain('actual-secret-sentinel');
+      expect(events.join('\n')).not.toContain('expected-secret-sentinel');
     } finally {
       await api.close();
       await rm(directory, { recursive: true, force: true });
@@ -108,14 +144,21 @@ describe('native cucumber-js consumer', () => {
 async function startApiServer(): Promise<{
   baseUrl: string;
   namespaces: string[];
+  orderRequests: number;
   close: () => Promise<void>;
 }> {
   const namespaces: string[] = [];
+  let orderRequests = 0;
   const server = createServer((request, response) => {
     const namespace = request.headers['x-xq-test-namespace'];
     if (typeof namespace === 'string') namespaces.push(namespace);
     response.writeHead(200, { 'content-type': 'application/json' });
-    response.end('{"ok":true}');
+    if (request.url === '/orders/123') {
+      orderRequests += 1;
+      response.end('{"id":123,"customer":{"id":"cust-123","name":"Ada","email":"ada@example.test","private":"actual-secret-sentinel"},"items":[{"sku":"SKU-1","quantity":2},{"sku":"SKU-2","quantity":1}],"status":"created"}');
+    } else {
+      response.end('{"ok":true}');
+    }
   });
   await new Promise<void>((resolveListen, rejectListen) => {
     server.once('error', rejectListen);
@@ -126,6 +169,7 @@ async function startApiServer(): Promise<{
   return {
     baseUrl: `http://127.0.0.1:${address.port}`,
     namespaces,
+    get orderRequests() { return orderRequests; },
     close: () => new Promise((resolveClose, rejectClose) => {
       server.close((error) => error ? rejectClose(error) : resolveClose());
     })

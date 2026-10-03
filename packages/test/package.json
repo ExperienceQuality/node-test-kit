@@ -54,6 +54,7 @@
     "@xq/core": "0.1.0",
     "@xq/db": "0.1.0",
     "@xq/stub": "0.1.0",
+    "pactum": "^3.9.1",
     "tsx": "^4.23.15"
   },
   "peerDependencies": {

@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
+import { createServer } from 'node:http';
 import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -93,12 +94,31 @@ export default defineCucumberConfig({ steps: 'features/steps/**/*.ts' });
       | customer.id | items[0].sku |
       | "cust-123"  | "SKU-1"      |
     Then the body contains the nested customer
+
+  @response-table
+  Scenario: assert the packed order from the request builder
+    Given a fresh company scenario context
+    When I retrieve the packed order expecting:
+      | id  | customer.id | customer.name | customer.email      | items[0].sku | items[0].quantity | status    |
+      | 123 | "cust-123"  | "Ada"         | "ada@example.test" | "SKU-1"      | 2                 | "created" |
+
+  @response-table
+  Scenario: assert multiple packed response paths without repeating the request
+    Given a fresh company scenario context
+    When I retrieve the packed order
+    Then response JSON at "$.customer" exactly matches:
+      | id         | name  | email               |
+      | "cust-123" | "Ada" | "ada@example.test" |
+    And response JSON at "items[0]" contains:
+      | sku     | quantity |
+      | "SKU-1" | 2        |
 `);
   await writeFile(join(consumer, 'features/steps/order.steps.ts'), `import assert from 'node:assert/strict';
 import { Given, Then, When, type DataTable } from '@cucumber/cucumber';
-import { composeJsonTable, type XqWorld } from '@xq/test/cucumber';
+import { assertJsonTable, composeJsonTable, expectJsonTable, type JsonTableResponse, type XqWorld } from '@xq/test/cucumber';
 
 type OrderWorld = XqWorld & { body?: unknown };
+type ResponseWorld = XqWorld & { orderResponse?: JsonTableResponse };
 
 Given('a fresh company scenario context', function (this: XqWorld) {
   assert.ok(this.run.id);
@@ -111,6 +131,25 @@ When('I compose this body:', function (this: OrderWorld, table: DataTable) {
 
 Then('the body contains the nested customer', function (this: OrderWorld) {
   assert.deepEqual(this.body, { customer: { id: 'cust-123' }, items: [{ sku: 'SKU-1' }] });
+});
+
+When('I retrieve the packed order expecting:', async function (this: XqWorld, table: DataTable) {
+  await expectJsonTable(this.api.get('/orders/123'), table, { mode: 'exact' }).expectStatus(200);
+});
+
+When('I retrieve the packed order', async function (this: ResponseWorld) {
+  const orderSpec = this.api.get('/orders/123').expectStatus(200);
+  this.orderResponse = await orderSpec;
+});
+
+Then('response JSON at {string} exactly matches:', async function (this: ResponseWorld, path: string, table: DataTable) {
+  if (!this.orderResponse) throw new Error('order request has not executed');
+  await assertJsonTable(this.orderResponse, table, { mode: 'exact', path });
+});
+
+Then('response JSON at {string} contains:', async function (this: ResponseWorld, path: string, table: DataTable) {
+  if (!this.orderResponse) throw new Error('order request has not executed');
+  await assertJsonTable(this.orderResponse, table, { mode: 'contains', path });
 });
 `);
 
@@ -139,6 +178,31 @@ Then('the body contains the nested customer', function (this: OrderWorld) {
   assert.equal(events[0].name, 'compose nested JSON');
   assert.equal(events[1].status, 'PASSED');
 
+  let orderRequests = 0;
+  const api = createServer((_request, response) => {
+    orderRequests += 1;
+    response.writeHead(200, { 'content-type': 'application/json' });
+    response.end('{"id":123,"customer":{"id":"cust-123","name":"Ada","email":"ada@example.test"},"items":[{"sku":"SKU-1","quantity":2}],"status":"created"}');
+  });
+  await new Promise((resolveListen, rejectListen) => {
+    api.once('error', rejectListen);
+    api.listen(0, '127.0.0.1', resolveListen);
+  });
+  const apiAddress = api.address();
+  if (!apiAddress || typeof apiAddress === 'string') throw new Error('packed consumer API server failed to bind');
+  try {
+    const responseEvents = join(consumer, 'response-events.ndjson');
+    await runAsync(resolve(consumer, 'node_modules/.bin/cucumber-js'), ['--tags', '@response-table'], consumer, {
+      XQ_TEST_BASE_URL: `http://127.0.0.1:${apiAddress.port}`,
+      XQ_CUCUMBER_EVENTS_FILE: responseEvents
+    });
+    const responseLifecycle = (await readFile(responseEvents, 'utf8')).trim().split('\n').map((line) => JSON.parse(line));
+    assert.deepEqual(responseLifecycle.filter((event) => event.event === 'scenario.finished').map((event) => event.status), ['PASSED', 'PASSED']);
+    assert.equal(orderRequests, 2, 'BDD path assertions should reuse one executed request');
+  } finally {
+    await new Promise((resolveClose, rejectClose) => api.close((error) => error ? rejectClose(error) : resolveClose()));
+  }
+
   console.log(`verified ${archives.length} archives in fresh NodeNext/Vitest and Cucumber consumers`);
 } finally {
   await rm(consumer, { recursive: true, force: true });
@@ -155,4 +219,30 @@ function run(command, args, cwd, extraEnvironment = {}) {
   }
   if (result.stdout.trim()) process.stdout.write(result.stdout);
   if (result.stderr.trim()) process.stderr.write(result.stderr);
+}
+
+function runAsync(command, args, cwd, extraEnvironment = {}) {
+  return new Promise((resolveRun, rejectRun) => {
+    const child = spawn(command, args, {
+      cwd,
+      env: { ...process.env, ...extraEnvironment, npm_config_cache: npmCache },
+      stdio: ['ignore', 'pipe', 'pipe']
+    });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.setEncoding('utf8');
+    child.stderr.setEncoding('utf8');
+    child.stdout.on('data', (chunk) => { stdout += chunk; });
+    child.stderr.on('data', (chunk) => { stderr += chunk; });
+    child.once('error', rejectRun);
+    child.once('close', (status) => {
+      if (status === 0) {
+        if (stdout.trim()) process.stdout.write(stdout);
+        if (stderr.trim()) process.stderr.write(stderr);
+        resolveRun();
+      } else {
+        rejectRun(new Error(`${command} ${args.join(' ')} failed\n${stdout}\n${stderr}`));
+      }
+    });
+  });
 }
