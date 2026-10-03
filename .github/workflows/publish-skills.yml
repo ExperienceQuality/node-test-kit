@@ -1,3 +1,4 @@
+# hub-stage: verify
 name: Publish agent skills
 
 on:

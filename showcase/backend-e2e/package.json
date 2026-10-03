@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "express": "^5.2.1",
-    "@xq/test": "0.1.0",
+    "@xq/test": "1.0.0",
     "pg": "^8.16.3"
   },
   "devDependencies": {

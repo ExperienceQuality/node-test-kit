@@ -1,0 +1,44 @@
+# hub-stage: publish
+name: Publish Node packages
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: release
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+          cache: npm
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Build release packages
+        run: npm run build
+
+      - name: Publish public packages
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
+        run: |
+          npm publish --workspace @xq/rest-client
+          npm publish --workspace @xq/db
+          npm publish --workspace @xq/stub
+          npm publish --workspace @xq/core
+          npm publish --workspace @xq/test
