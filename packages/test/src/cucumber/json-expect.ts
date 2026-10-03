@@ -1,7 +1,7 @@
 import type { IncomingMessage } from 'node:http';
 import pactum from 'pactum';
 import type { DataTable } from '@cucumber/cucumber';
-import type { PactumSpec } from '@xq/rest-client';
+import type { PactumSpec } from '@experiencequality/rest-client';
 import { composeJsonTable } from './json.js';
 
 export type JsonTableMode = 'exact' | 'contains';

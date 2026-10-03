@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { World, type IWorldOptions } from '@cucumber/cucumber';
-import { createRestClient, type RestClient } from '@xq/rest-client';
+import { createRestClient, type RestClient } from '@experiencequality/rest-client';
 import type { ScenarioRunContext, XqScenarioConfig } from './types.js';
 
 const NAMESPACE_HEADER = 'x-xq-test-namespace';

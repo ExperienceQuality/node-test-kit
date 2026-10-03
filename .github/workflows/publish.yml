@@ -41,8 +41,8 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ github.token }}
         run: |
-          npm publish --workspace @xq/rest-client
-          npm publish --workspace @xq/db
-          npm publish --workspace @xq/stub
-          npm publish --workspace @xq/core
-          npm publish --workspace @xq/test
+          npm publish --workspace @experiencequality/rest-client
+          npm publish --workspace @experiencequality/db
+          npm publish --workspace @experiencequality/stub
+          npm publish --workspace @experiencequality/core
+          npm publish --workspace @experiencequality/test

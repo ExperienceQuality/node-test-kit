@@ -2,7 +2,7 @@
 
 This guide is for an application repository that consumes the internal XQ test
 platform. The application owns `.feature` files and business step definitions;
-`@xq/test` supplies the runtime, World, fixtures, and observability.
+`@experiencequality/test` supplies the runtime, World, fixtures, and observability.
 
 ## Install the released kit
 
@@ -18,11 +18,11 @@ read-only token in the consumer environment, not in source control:
 Install the facade and its compatible peer tools at exact versions:
 
 ```bash
-npm install --save-dev @xq/test@1.0.0 @cucumber/cucumber@13.2.1 vitest@4.1.11
+npm install --save-dev @experiencequality/test@1.0.0 @cucumber/cucumber@13.2.1 vitest@4.1.11
 ```
 
-Consumers normally import only `@xq/test`. The `@xq/core`, `@xq/db`,
-`@xq/rest-client`, and `@xq/stub` packages are internal implementation
+Consumers normally import only `@experiencequality/test`. The `@experiencequality/core`, `@experiencequality/db`,
+`@experiencequality/rest-client`, and `@experiencequality/stub` packages are internal implementation
 dependencies resolved from the same private registry.
 
 ## Minimal Cucumber setup
@@ -30,7 +30,7 @@ dependencies resolved from the same private registry.
 Keep Cucumber as the runner. Create a small `cucumber.mjs` in the application:
 
 ```js
-import { defineCucumberConfig } from '@xq/test/cucumber/config';
+import { defineCucumberConfig } from '@experiencequality/test/cucumber/config';
 
 export default defineCucumberConfig({
   steps: 'features/steps/**/*.ts'
@@ -62,7 +62,7 @@ When I submit an order:
 
 ```ts
 import { When, type DataTable } from '@cucumber/cucumber';
-import { composeJsonTable, type XqWorld } from '@xq/test/cucumber';
+import { composeJsonTable, type XqWorld } from '@experiencequality/test/cucumber';
 
 When('I submit an order:', async function (this: XqWorld, table: DataTable) {
   const body = composeJsonTable(table);
@@ -81,7 +81,7 @@ request. Awaiting the spec executes it once:
 
 ```ts
 import { Then } from '@cucumber/cucumber';
-import { expectJsonTable } from '@xq/test/cucumber';
+import { expectJsonTable } from '@experiencequality/test/cucumber';
 
 Then('the order response matches:', async function (table) {
   await expectJsonTable(this.api.get('/orders/123'), table, {
@@ -94,7 +94,7 @@ For business steps that make several assertions, execute once and retain the
 public response in the scenario World:
 
 ```ts
-import { assertJsonTable } from '@xq/test/cucumber';
+import { assertJsonTable } from '@experiencequality/test/cucumber';
 
 When('I retrieve the order', async function () {
   this.orderResponse = await this.api.get('/orders/123').expectStatus(200);

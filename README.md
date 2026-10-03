@@ -27,7 +27,7 @@ npm test
 For the backend test kit, start with:
 
 ```ts
-import { defineConfig } from '@xq/test/vitest/config';
+import { defineConfig } from '@experiencequality/test/vitest/config';
 
 export default defineConfig({
   application: { url: 'http://127.0.0.1:4000/health' }
@@ -35,7 +35,7 @@ export default defineConfig({
 ```
 
 ```ts
-import { test } from '@xq/test/vitest';
+import { test } from '@experiencequality/test/vitest';
 
 test('uses the platform-owned kit fixture', async ({ kit }) => {
   console.log(kit.rest, kit.stub, kit.run);

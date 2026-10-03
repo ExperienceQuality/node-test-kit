@@ -24,11 +24,11 @@ are validation only; they do not publish packages.
 
 The internal release packages are:
 
-- `@xq/rest-client`
-- `@xq/db`
-- `@xq/stub`
-- `@xq/core`
-- `@xq/test`
+- `@experiencequality/rest-client`
+- `@experiencequality/db`
+- `@experiencequality/stub`
+- `@experiencequality/core`
+- `@experiencequality/test`
 
 The root workspace and showcase remain private. Release all five internal
 packages at the same version so exact dependencies resolve correctly. Packages

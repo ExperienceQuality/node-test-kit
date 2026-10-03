@@ -1,5 +1,5 @@
-import { createRestClient, type RestClient } from '@xq/rest-client';
-import { StubClient } from '@xq/stub';
+import { createRestClient, type RestClient } from '@experiencequality/rest-client';
+import { StubClient } from '@experiencequality/stub';
 import type { RunContext } from './run-context.js';
 
 export interface Kit {

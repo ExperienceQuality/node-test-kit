@@ -9,11 +9,11 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const artifacts = resolve(root, 'artifacts');
 const packageNames = [
-  '@xq/rest-client',
-  '@xq/db',
-  '@xq/stub',
-  '@xq/core',
-  '@xq/test'
+  '@experiencequality/rest-client',
+  '@experiencequality/db',
+  '@experiencequality/stub',
+  '@experiencequality/core',
+  '@experiencequality/test'
 ];
 const consumer = await mkdtemp(join(tmpdir(), 'xq-test-consumer-'));
 const npmCache = resolve(consumer, '.npm-cache');
@@ -53,17 +53,17 @@ try {
     include: ['vitest.config.ts', 'test/**/*.ts']
   }, null, 2)}\n`);
   await mkdir(join(consumer, 'test'), { recursive: true });
-  await writeFile(join(consumer, 'vitest.config.ts'), `import { defineConfig } from '@xq/test/vitest/config';
+  await writeFile(join(consumer, 'vitest.config.ts'), `import { defineConfig } from '@experiencequality/test/vitest/config';
 
 export default defineConfig({
   databases: { orders: { urlEnv: 'PACKAGE_SMOKE_DATABASE_URL', defaultSchema: 'sales' } },
   test: { include: ['test/**/*.test.ts'] }
 });
 `);
-  await writeFile(join(consumer, 'test', 'package-imports.test.ts'), `import * as root from '@xq/test';
-import type { Kysely } from '@xq/db';
-import { expect, test } from '@xq/test/vitest';
-import { defineConfig } from '@xq/test/vitest/config';
+  await writeFile(join(consumer, 'test', 'package-imports.test.ts'), `import * as root from '@experiencequality/test';
+import type { Kysely } from '@experiencequality/db';
+import { expect, test } from '@experiencequality/test/vitest';
+import { defineConfig } from '@experiencequality/test/vitest/config';
 
 interface OrdersDatabase {
   orders: { id: number; status: string };
@@ -81,7 +81,7 @@ test('loads every public package entrypoint from packed archives', ({ kit }) => 
 });
 `);
   await mkdir(join(consumer, 'features/steps'), { recursive: true });
-  await writeFile(join(consumer, 'cucumber.mjs'), `import { defineCucumberConfig } from '@xq/test/cucumber/config';
+  await writeFile(join(consumer, 'cucumber.mjs'), `import { defineCucumberConfig } from '@experiencequality/test/cucumber/config';
 
 export default defineCucumberConfig({ steps: 'features/steps/**/*.ts' });
 `);
@@ -115,7 +115,7 @@ export default defineCucumberConfig({ steps: 'features/steps/**/*.ts' });
 `);
   await writeFile(join(consumer, 'features/steps/order.steps.ts'), `import assert from 'node:assert/strict';
 import { Given, Then, When, type DataTable } from '@cucumber/cucumber';
-import { assertJsonTable, composeJsonTable, expectJsonTable, type JsonTableResponse, type XqWorld } from '@xq/test/cucumber';
+import { assertJsonTable, composeJsonTable, expectJsonTable, type JsonTableResponse, type XqWorld } from '@experiencequality/test/cucumber';
 
 type OrderWorld = XqWorld & { body?: unknown };
 type ResponseWorld = XqWorld & { orderResponse?: JsonTableResponse };

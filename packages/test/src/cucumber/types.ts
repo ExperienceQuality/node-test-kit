@@ -1,4 +1,4 @@
-import type { RestClient } from '@xq/rest-client';
+import type { RestClient } from '@experiencequality/rest-client';
 
 export interface XqScenarioConfig {
   readonly baseUrl: string;

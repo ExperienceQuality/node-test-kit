@@ -1,5 +1,5 @@
 import { expect } from "vitest";
-import { test } from "@xq/test/vitest";
+import { test } from "@experiencequality/test/vitest";
 
 test("consumer drives a dummy backend through the kit facade", async ({
   kit,

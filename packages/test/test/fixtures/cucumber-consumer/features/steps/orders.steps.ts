@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { Before, Given, Then, When, type DataTable } from '@cucumber/cucumber';
-import { assertJsonTable, composeJsonTable, expectJsonTable, type JsonTableResponse } from '@xq/test/cucumber';
-import type { XqWorld } from '@xq/test/cucumber';
+import { assertJsonTable, composeJsonTable, expectJsonTable, type JsonTableResponse } from '@experiencequality/test/cucumber';
+import type { XqWorld } from '@experiencequality/test/cucumber';
 
 Before({ tags: '@before-failure' }, function () {
   throw new Error('intentional before hook failure');

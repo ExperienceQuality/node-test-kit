@@ -83,4 +83,4 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --verify-tag \
             --generate-notes \
-            --notes "@xq/test platform release ${VERSION}; published to the company GitHub Packages npm registry."
+            --notes "@experiencequality/test platform release ${VERSION}; published to the company GitHub Packages npm registry."

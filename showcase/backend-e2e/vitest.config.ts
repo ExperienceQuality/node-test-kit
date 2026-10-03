@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import { defineConfig } from '@xq/test/vitest/config';
+import { defineConfig } from '@experiencequality/test/vitest/config';
 
 export default defineConfig({
   test: { include: ['test/**/*.test.ts'] },
