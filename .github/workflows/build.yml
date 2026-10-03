@@ -3,6 +3,11 @@ name: Build
 
 on:
   workflow_call:
+    inputs:
+      ref:
+        required: false
+        type: string
+        default: main
   pull_request:
     branches: [main]
   push:
@@ -18,8 +23,14 @@ concurrency:
 
 jobs:
   build:
-    uses: ExperienceQuality/.github/.github/workflows/node-library-build.yml@v1
-    with:
-      node-version: '24'
-      package-manager: npm
-      working-directory: .
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run check

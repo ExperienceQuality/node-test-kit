@@ -5,6 +5,12 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing release tag to build and publish
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -17,14 +23,19 @@ jobs:
   route:
     runs-on: ubuntu-latest
     outputs:
+      ref: ${{ steps.route.outputs.ref }}
       version: ${{ steps.route.outputs.version }}
     steps:
       - id: route
         name: Validate release tag
         env:
           REF_NAME: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
-          if [[ "$REF_NAME" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+          TAG_NAME="$REF_NAME"
+          if [[ -n "$RELEASE_TAG" ]]; then TAG_NAME="$RELEASE_TAG"; fi
+          if [[ "$TAG_NAME" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "ref=$TAG_NAME" >> "$GITHUB_OUTPUT"
             echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
           else
             echo "Unsupported release tag: $REF_NAME" >&2
@@ -34,14 +45,20 @@ jobs:
   build:
     needs: route
     uses: ./.github/workflows/build.yml
+    with:
+      ref: ${{ needs.route.outputs.ref }}
 
   test:
     needs: [route, build]
     uses: ./.github/workflows/test.yml
+    with:
+      ref: ${{ needs.route.outputs.ref }}
 
   publish:
     needs: [route, build, test]
     uses: ./.github/workflows/publish.yml
+    with:
+      ref: ${{ needs.route.outputs.ref }}
     permissions:
       contents: read
       packages: write
@@ -55,12 +72,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ needs.route.outputs.ref }}
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.route.outputs.version }}
+          TAG_NAME: ${{ needs.route.outputs.ref }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
+          gh release create "$TAG_NAME" \
             --repo "$GITHUB_REPOSITORY" \
             --verify-tag \
             --generate-notes \
