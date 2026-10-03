@@ -34,10 +34,6 @@ export class PactumCaptureRegistry {
   register(client: RestClient, captureKey: string): void {
     this.install();
     this.owners.set(captureKey, new WeakRef(client));
-    console.log('[node-test-kit] Pactum capture client registered', {
-      captureKey,
-      namespace: client.config.namespace
-    });
   }
 
   private install(): void {
@@ -61,10 +57,6 @@ export class PactumCaptureRegistry {
 
       capture.request = structuredClone(event.request);
       capture.response = event.response;
-      console.log('[node-test-kit] Pactum request/response captured', {
-        request: capture.request,
-        response: capture.response
-      });
     });
 
     events.pactumEvents.on(events.EVENT_TYPES.AFTER_RESPONSE_ERROR, (event: ResponseErrorEvent) => {
@@ -73,21 +65,9 @@ export class PactumCaptureRegistry {
 
       capture.error = event.error;
       capture.response = event.response;
-      console.log('[node-test-kit] Pactum request/response error captured', {
-        request: capture.request,
-        response: capture.response,
-        error: capture.error
-      });
     });
 
     this.installed = true;
-    console.log('[node-test-kit] Pactum capture events registered', {
-      events: [
-        events.EVENT_TYPES.BEFORE_REQUEST,
-        events.EVENT_TYPES.AFTER_RESPONSE,
-        events.EVENT_TYPES.AFTER_RESPONSE_ERROR
-      ]
-    });
   }
 
   private findOwner(request: PactumRequest): RestClient | undefined {

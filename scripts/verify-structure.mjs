@@ -55,10 +55,18 @@ const expectedExports = {
   '.': { types: './dist/index.d.ts', import: './dist/index.js' },
   './vitest': { types: './dist/vitest/test.d.ts', import: './dist/vitest/test.js' },
   './vitest/config': { types: './dist/vitest/config.d.ts', import: './dist/vitest/config.js' },
+  './cucumber': { types: './dist/cucumber/index.d.ts', import: './dist/cucumber/index.js' },
+  './cucumber/config': { types: './dist/cucumber/config.d.ts', import: './dist/cucumber/config.js' },
+  './cucumber/register': { types: './dist/cucumber/register.d.ts', import: './dist/cucumber/register.js' },
+  './cucumber/bootstrap': { types: './dist/cucumber/bootstrap.d.ts', import: './dist/cucumber/bootstrap.js' },
+  './cucumber/plugin': { types: './dist/cucumber/plugin.d.ts', import: './dist/cucumber/plugin.js' },
+  './cucumber/json': { types: './dist/cucumber/json.d.ts', import: './dist/cucumber/json.js' },
   './package.json': './package.json'
 };
 assert(JSON.stringify(facade.exports) === JSON.stringify(expectedExports), '@xq/test exports changed');
 assert(facade.peerDependencies?.vitest === '^4.0.0', '@xq/test must expose its Vitest peer requirement');
+assert(facade.peerDependencies?.['@cucumber/cucumber'] === '>=13.2.1 <14', '@xq/test must expose its Cucumber peer requirement');
+assert(facade.peerDependenciesMeta?.['@cucumber/cucumber']?.optional === true, '@xq/test Cucumber peer must remain optional');
 
 for (const legacyRoot of ['src', 'test', 'demo']) {
   assert(filesUnder(resolve(root, legacyRoot)).length === 0, `legacy root ${legacyRoot}/ still owns files`);
