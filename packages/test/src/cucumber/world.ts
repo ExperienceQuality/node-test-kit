@@ -1,7 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { World, type IWorldOptions } from '@cucumber/cucumber';
 import { createRestClient, type RestClient } from '@experiencequality/rest-client';
+import { StubClient } from '@experiencequality/stub';
 import type { ScenarioRunContext, XqScenarioConfig } from './types.js';
+import { createCucumberStubClient, getCucumberStubRuntime, startCucumberStub } from './stub-lifecycle.js';
 
 const NAMESPACE_HEADER = 'x-xq-test-namespace';
 
@@ -15,6 +17,7 @@ export class XqWorld extends World {
   config!: XqScenarioConfig;
   api!: RestClient;
   rest!: RestClient;
+  #stub: StubClient | undefined;
 
   constructor(options: IWorldOptions) {
     super(options);
@@ -22,10 +25,15 @@ export class XqWorld extends World {
 
   initialize(): void {
     const baseUrl = resolveBaseUrl(process.env.XQ_TEST_BASE_URL);
+    const stubRuntime = getCucumberStubRuntime();
     this.config = Object.freeze({
       baseUrl,
       namespaceHeader: NAMESPACE_HEADER,
-      namespace: this.run.id
+      namespace: this.run.id,
+      ...(stubRuntime ? {
+        stubUrl: stubRuntime.url,
+        stubNamespaceHeader: stubRuntime.namespaceHeader
+      } : {})
     });
     this.rest = createRestClient({
       baseUrl,
@@ -33,10 +41,33 @@ export class XqWorld extends World {
       namespace: this.config.namespace
     });
     this.api = this.rest;
+    this.#stub = createCucumberStubClient(this.config.namespace);
+  }
+
+  get stub(): StubClient {
+    if (this.#stub) return this.#stub;
+    throw new Error('node-test-kit: Cucumber stub is disabled; set XQ_TEST_STUB_ENABLED=true or XQ_TEST_STUB_URL');
+  }
+
+  async requireStub(): Promise<StubClient> {
+    if (!this.#stub) {
+      await startCucumberStub(true);
+      const runtime = getCucumberStubRuntime();
+      this.config = Object.freeze({
+        ...this.config,
+        ...(runtime ? {
+          stubUrl: runtime.url,
+          stubNamespaceHeader: runtime.namespaceHeader
+        } : {})
+      });
+      this.#stub = createCucumberStubClient(this.config.namespace);
+    }
+    if (!this.#stub) throw new Error('node-test-kit: Cucumber stub could not be initialized');
+    return this.#stub;
   }
 
   async close(): Promise<void> {
-    // RestClient owns no sockets or external resources. Keep hook boundary for future services.
+    await this.#stub?.clearInteractions();
   }
 }
 

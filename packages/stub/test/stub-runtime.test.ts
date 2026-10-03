@@ -125,3 +125,45 @@ test('rejects attempts to override the reserved namespace header', async () => {
     await server.stop();
   }
 });
+
+test('verifies request shape, call count, and no unexpected owned interactions', async () => {
+  const server = await startPactumServer();
+  const stub = new StubClient({ baseUrl: server.url, namespace: 'assertions' });
+
+  try {
+    const id = await stub.addInteraction({
+      request: {
+        method: 'POST',
+        path: '/orders',
+        queryParams: { region: 'eu' },
+        headers: { 'x-request-id': 'request-1' },
+        body: { sku: 'SKU-1' }
+      },
+      response: { status: 201, body: { ok: true } }
+    });
+
+    await stub.verifyRequest(id, {
+      method: 'POST',
+      path: '/orders',
+      queryParams: { region: 'eu' },
+      headers: { 'x-request-id': 'request-1' },
+      body: { sku: 'SKU-1' }
+    });
+    await stub.verifyNotCalled(id);
+    await stub.verifyNoUnexpectedInteractions();
+
+    await fetch(`${server.url}/orders?region=eu`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-node-test-kit-namespace': 'assertions',
+        'x-request-id': 'request-1'
+      },
+      body: JSON.stringify({ sku: 'SKU-1' })
+    });
+    await stub.verifyCalled(id);
+  } finally {
+    await stub.clearInteractions();
+    await server.stop();
+  }
+});

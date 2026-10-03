@@ -55,7 +55,28 @@ and exit status. The config defaults to `features/**/*.feature`; pass `paths`
 when a project keeps features elsewhere. CLI options such as `--tags`, `--name`,
 and `--parallel` remain Cucumber options.
 
-Each scenario receives a fresh `XqWorld` with `api`/`rest`, `run`, and `config`.
+Each scenario receives a fresh `XqWorld` with `api`/`rest`, namespaced `stub`,
+`run`, and `config`. The kit starts one local Pactum server before the run,
+sets `XQ_TEST_STUB_URL`, and clears only the current scenario's interactions
+after each scenario. Use `XQ_TEST_STUB_URL` to point at an externally managed
+server, or set `XQ_TEST_STUB_ENABLED=false` to disable automatic startup.
+An explicitly stub-using step can call `await this.requireStub()` when startup
+is disabled. `XQ_TEST_STUB_PORT` optionally selects a fixed local port.
+
+```ts
+When('I stub the payment lookup', async function (this: XqWorld) {
+  const stub = await this.requireStub();
+  await stub.addInteraction({
+    request: { method: 'GET', path: '/payments/pay-1' },
+    response: { status: 200, body: { status: 'paid' } }
+  });
+});
+```
+
+The API client sends `x-xq-test-namespace`; the stub client injects the
+reserved `x-node-test-kit-namespace`. The application remains responsible for
+forwarding the incoming namespace to downstream calls.
+
 Set `XQ_TEST_BASE_URL` before running scenarios; missing or invalid URLs fail in
 the company `Before` hook. TypeScript steps are registered through the framework's
 `tsx` integration.

@@ -78,6 +78,7 @@ await kit.rest.post('/routines').withJson({ name: 'Strength A' }).expectStatus(2
 - `PactumServer`: `host`, `port`, `url`, `managementUrl`, `namespaceHeader`, and idempotent async `stop()`.
 - `StubClientOptions`: `baseUrl`, `namespace`, and optional `namespaceHeader`.
 - `addInteraction`, `getInteraction`, `removeInteraction`, and `clearInteractions` manage owned interactions.
+- `verifyRequest`, `getCallCount`, `verifyCallCount`, `verifyCalled`, `verifyNotCalled`, and `verifyNoUnexpectedInteractions` provide generic request and mutation assertions.
 - `PactumInteraction` and `PactumInteractionDetails` are exported Pactum types.
 
 Clients own only interactions they add. Other IDs cannot be read or removed. Namespace headers are injected and cannot be overridden with another value.
@@ -121,6 +122,8 @@ try {
 - `@experiencequality/test/cucumber` exports `XqWorld`, `composeJsonTable`, `assertJsonTable`, `expectJsonTable`, and `registerJsonTableExpectation`, plus scenario and table option types.
 - `@experiencequality/test/cucumber/register`, `/bootstrap`, and `/plugin` are configuration entry points used by `defineCucumberConfig`.
 - `@experiencequality/test/cucumber/json` exports JSON-table composition helpers.
+- Cucumber bootstrap starts one local Pactum server by default, exposes `XQ_TEST_STUB_URL`, creates a namespaced `world.stub`, and clears that world's interactions after each scenario.
+- `XQ_TEST_STUB_ENABLED=false` disables automatic startup; `XQ_TEST_STUB_URL` selects an external server; `XQ_TEST_STUB_PORT` selects a fixed local port. A step can call `await this.requireStub()` for explicit opt-in when disabled.
 
 Configure feature paths and step imports through `defineCucumberConfig({ paths, steps })`. JSON table headers support dotted object paths and indexed array paths; malformed, duplicate, conflicting, or sparse paths fail with `xq-test:` errors.
 
@@ -128,6 +131,7 @@ Configure feature paths and step imports through `defineCucumberConfig({ paths, 
 
 - `NODE_TEST_KIT_BACKEND_URL` supplies a backend URL when metadata has none.
 - `NODE_TEST_KIT_STUB_URL` supplies a stub URL when mock metadata has none.
+- `XQ_TEST_STUB_ENABLED`, `XQ_TEST_STUB_URL`, and `XQ_TEST_STUB_PORT` configure the Cucumber stub lifecycle.
 - `VITEST_WORKER_ID` or `VITEST_POOL_ID` supplies worker identity.
 - The kit does not own deployment, migrations, or consumer payload builders.
 - Keep secrets in the process environment, not committed config.
