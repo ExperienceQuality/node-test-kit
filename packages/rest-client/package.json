@@ -1,7 +1,7 @@
 {
   "name": "@xq/rest-client",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
+  "publishConfig": { "access": "public" },
   "type": "module",
   "exports": {
     ".": {
@@ -14,9 +14,14 @@
     "check": "tsc -p tsconfig.test.json --noEmit",
     "test": "vitest run"
   },
-  "engines": { "node": ">=24" },
+  "engines": {
+    "node": ">=24"
+  },
   "dependencies": {
     "pactum": "^3.9.1"
   },
-  "files": ["dist", "package.json"]
+  "files": [
+    "dist",
+    "package.json"
+  ]
 }

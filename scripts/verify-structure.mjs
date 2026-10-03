@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const libraryNames = ['rest-client', 'db', 'stub', 'core', 'test'];
+const publicPackageNames = new Set(libraryNames.map((name) => `@xq/${name}`));
 const workspacePaths = [...libraryNames.map((name) => `packages/${name}`), 'showcase/backend-e2e'];
 const expectedDependencies = new Map([
   ['rest-client', []],
@@ -25,7 +26,13 @@ assert(JSON.stringify(actualLibraries) === JSON.stringify([...libraryNames].sort
 
 for (const workspacePath of workspacePaths) {
   const packageJson = readJson(`${workspacePath}/package.json`);
-  assert(packageJson.private === true, `${workspacePath} must remain private`);
+  if (workspacePath.startsWith('packages/')) {
+    assert(packageJson.private !== true, `${workspacePath} must be publishable`);
+    assert(publicPackageNames.has(packageJson.name), `${workspacePath} has an unexpected public package name`);
+    assert(packageJson.publishConfig?.access === 'public', `${workspacePath} must publish with public access`);
+  } else {
+    assert(packageJson.private === true, `${workspacePath} must remain private`);
+  }
   for (const directory of ['src', 'test']) {
     assert(existsSync(resolve(root, workspacePath, directory)), `${workspacePath} must own ${directory}/`);
   }

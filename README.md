@@ -2,8 +2,9 @@
 
 Vitest-based foundation for backend functional and API E2E testing.
 
-The repository is a private npm workspace. Consumer-facing packages and
-platform documentation are split into focused documents:
+The repository is a private npm workspace containing five public consumer
+packages. Consumer-facing packages and platform documentation are split into
+focused documents:
 
 | Topic | Documentation |
 | --- | --- |

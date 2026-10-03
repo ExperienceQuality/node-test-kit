@@ -1,7 +1,7 @@
 {
   "name": "@xq/core",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
+  "publishConfig": { "access": "public" },
   "type": "module",
   "exports": {
     ".": {
@@ -14,10 +14,15 @@
     "check": "tsc -p tsconfig.test.json --noEmit",
     "test": "vitest run"
   },
-  "engines": { "node": ">=24" },
-  "dependencies": {
-    "@xq/rest-client": "0.1.0",
-    "@xq/stub": "0.1.0"
+  "engines": {
+    "node": ">=24"
   },
-  "files": ["dist", "package.json"]
+  "dependencies": {
+    "@xq/rest-client": "1.0.0",
+    "@xq/stub": "1.0.0"
+  },
+  "files": [
+    "dist",
+    "package.json"
+  ]
 }

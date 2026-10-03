@@ -1,7 +1,7 @@
 {
   "name": "@xq/test",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
+  "publishConfig": { "access": "public" },
   "type": "module",
   "description": "A platform-owned Vitest foundation for backend functional E2E tests.",
   "exports": {
@@ -49,11 +49,13 @@
     "test": "vitest run",
     "test:postgres": "vitest run --config vitest.database.config.ts"
   },
-  "engines": { "node": ">=24" },
+  "engines": {
+    "node": ">=24"
+  },
   "dependencies": {
-    "@xq/core": "0.1.0",
-    "@xq/db": "0.1.0",
-    "@xq/stub": "0.1.0",
+    "@xq/core": "1.0.0",
+    "@xq/db": "1.0.0",
+    "@xq/stub": "1.0.0",
     "pactum": "^3.9.1",
     "tsx": "^4.23.15"
   },
@@ -62,8 +64,16 @@
     "vitest": "^4.0.0"
   },
   "peerDependenciesMeta": {
-    "@cucumber/cucumber": { "optional": true },
-    "vitest": { "optional": true }
+    "@cucumber/cucumber": {
+      "optional": true
+    },
+    "vitest": {
+      "optional": true
+    }
   },
-  "files": ["dist", "README.md", "package.json"]
+  "files": [
+    "dist",
+    "README.md",
+    "package.json"
+  ]
 }

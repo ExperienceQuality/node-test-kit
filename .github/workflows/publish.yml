@@ -1,0 +1,46 @@
+# hub-stage: publish
+name: Publish Node packages
+
+on:
+  workflow_call:
+    secrets:
+      NPM_TOKEN:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: release
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          cache: npm
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Build release packages
+        run: npm run build
+
+      - name: Publish public packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm publish --workspace @xq/rest-client --access public
+          npm publish --workspace @xq/db --access public
+          npm publish --workspace @xq/stub --access public
+          npm publish --workspace @xq/core --access public
+          npm publish --workspace @xq/test --access public
