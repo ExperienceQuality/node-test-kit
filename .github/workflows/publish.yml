@@ -16,10 +16,9 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    environment:
-      name: release
     permissions:
       contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,7 +37,7 @@ jobs:
       - name: Build release packages
         run: npm run build
 
-      - name: Publish public packages
+      - name: Publish company packages
         env:
           NODE_AUTH_TOKEN: ${{ github.token }}
         run: |
