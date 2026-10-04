@@ -49,6 +49,32 @@ export default defineCucumberConfig({
 });
 ```
 
+`defineCucumberConfig` is the supported helper-level enforcement boundary for
+report output. It always enables concise `progress` output plus a standalone
+HTML report. The default path is the consumer-relative
+`artifacts/index.html`; blank or missing `reportPath` values use that default.
+Set `reportPath` to another consumer-relative location when needed:
+
+```js
+export default defineCucumberConfig({
+  steps: 'features/steps/**/*.ts',
+  reportPath: 'reports/cucumber.html'
+});
+```
+
+Absolute paths and traversal outside the consumer workspace are rejected.
+This guarantee applies when configuration is built through
+`defineCucumberConfig`; hand-written Cucumber configuration and direct CLI
+formatter selection are outside the helper's enforcement boundary.
+
+The CI test workflow uploads the default `artifacts/index.html` as the
+`cucumber-report` artifact with `if: always()` and seven-day retention, so
+failed runs retain a downloadable report for diagnosis. GitHub Pages publishes
+only the latest successful report from `main` as the site-root `index.html`.
+Failed, pull-request, and release-tag runs do not replace the last successful
+Pages deployment. `CUCUMBER_REPORT_PATH` is the package constant for the
+default path; it is not an environment-variable override by itself.
+
 Run it with the standard `cucumber-js` executable. Cucumber owns feature
 discovery, scenario selection, tag/name filters, parallelism, IDE integration,
 and exit status. The config defaults to `features/**/*.feature`; pass `paths`
@@ -73,9 +99,9 @@ When('I stub the payment lookup', async function (this: XqWorld) {
 });
 ```
 
-The API client sends `x-xq-test-namespace`; the stub client injects the
-reserved `x-node-test-kit-namespace`. The application remains responsible for
-forwarding the incoming namespace to downstream calls.
+The API and stub clients use the reserved `x-node-test-kit-namespace` header.
+The application remains responsible for forwarding the incoming namespace to
+downstream calls.
 
 Set `XQ_TEST_BASE_URL` before running scenarios; missing or invalid URLs fail in
 the company `Before` hook. TypeScript steps are registered through the framework's

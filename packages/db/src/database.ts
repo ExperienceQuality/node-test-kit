@@ -25,7 +25,9 @@ export function createDatabaseClients(
   environment: NodeJS.ProcessEnv = process.env
 ): DatabaseClients {
   const configured = Object.entries(descriptors).map(([name, descriptor]) => {
-    const connectionString = environment['DATABASE_URL'] ?? descriptor.urlEnv;
+    // A named descriptor wins over DATABASE_URL so multiple clients can use
+    // different databases. DATABASE_URL remains the compatibility fallback.
+    const connectionString = environment[descriptor.urlEnv] ?? environment.DATABASE_URL;
     if (!connectionString) {
       throw new Error(`node-test-kit: database "${name}" requires environment variable ${descriptor.urlEnv}`);
     }

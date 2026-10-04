@@ -102,7 +102,7 @@ await kit.stub.removeInteraction(id);
 - `DatabaseClients.get<Database>(name)` returns a typed Kysely client.
 - Kysely types `ColumnType`, `Generated`, `GeneratedAlways`, `Insertable`, `Selectable`, `Updateable`, and `Kysely` are re-exported.
 
-Each descriptor reads `DATABASE_URL` when present, otherwise its `urlEnv`. Missing configuration and unknown names throw explicit `node-test-kit:` errors.
+Each descriptor first reads the environment variable named by its `urlEnv`; `DATABASE_URL` is the fallback when that descriptor-specific variable is absent. This precedence allows named clients to use different databases while retaining the single-database default. Missing configuration and unknown names throw explicit `node-test-kit:` errors.
 
 ```ts
 const db = createDatabaseClients({ app: { urlEnv: 'APP_DATABASE_URL', defaultSchema: 'public' } });
@@ -125,7 +125,7 @@ try {
 - Cucumber bootstrap starts one local Pactum server by default, exposes `XQ_TEST_STUB_URL`, creates a namespaced `world.stub`, and clears that world's interactions after each scenario.
 - `XQ_TEST_STUB_ENABLED=false` disables automatic startup; `XQ_TEST_STUB_URL` selects an external server; `XQ_TEST_STUB_PORT` selects a fixed local port. A step can call `await this.requireStub()` for explicit opt-in when disabled.
 
-Configure feature paths and step imports through `defineCucumberConfig({ paths, steps })`. JSON table headers support dotted object paths and indexed array paths; malformed, duplicate, conflicting, or sparse paths fail with `xq-test:` errors.
+Configure feature paths and step imports through `defineCucumberConfig({ paths, steps })`. The API always enables `progress` plus a standalone HTML report at `artifacts/index.html`; set `reportPath` to customize its output path. `CUCUMBER_REPORT_PATH` exports the default path for CI packaging and GitHub Pages publishing. JSON table headers support dotted object paths and indexed array paths; malformed, duplicate, conflicting, or sparse paths fail with `xq-test:` errors.
 
 ## Environment and boundaries
 

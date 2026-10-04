@@ -24,12 +24,20 @@ describe('database clients', () => {
     await destroyDatabaseClients(clients);
   });
 
-  it('falls back to the descriptor URL when its environment variable is missing', async () => {
+  it('uses DATABASE_URL as the explicit fallback when the descriptor variable is missing', async () => {
     const clients = createDatabaseClients({
-      analytics: { urlEnv: 'postgres://test:test@127.0.0.1:1/analytics' }
-    }, {});
+      analytics: { urlEnv: 'ANALYTICS_DATABASE_URL' }
+    }, { DATABASE_URL: 'postgres://test:test@127.0.0.1:1/analytics' });
 
     expect(clients.get('analytics')).toBeDefined();
     await destroyDatabaseClients(clients);
+  });
+
+  it('fails clearly when the descriptor and fallback variables are missing', () => {
+    expect(() => createDatabaseClients({
+      analytics: { urlEnv: 'ANALYTICS_DATABASE_URL' }
+    }, {})).toThrow(
+      'node-test-kit: database "analytics" requires environment variable ANALYTICS_DATABASE_URL'
+    );
   });
 });

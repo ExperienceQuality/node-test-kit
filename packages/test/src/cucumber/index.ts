@@ -4,3 +4,4 @@ export { assertJsonTable, expectJsonTable, registerJsonTableExpectation } from '
 export type { JsonTableExpectationOptions, JsonTableMode, JsonTableResponse } from './json-expect.js';
 export type { ScenarioRunContext, XqScenarioConfig } from './types.js';
 export type { CucumberProjectConfig } from './types.js';
+export { CUCUMBER_REPORT_PATH } from './config.js';

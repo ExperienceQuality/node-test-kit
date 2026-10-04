@@ -62,5 +62,5 @@ expect(interaction.exercised).toBe(true);
 Available operations are `addInteraction`, `getInteraction`,
 `removeInteraction`, and `clearInteractions`. Cleanup runs after the test,
 including after failures. The application must forward the reserved
-`x-@experiencequality/test-namespace` header to downstream mock requests for parallel
+`x-node-test-kit-namespace` header to downstream mock requests for parallel
 test isolation.

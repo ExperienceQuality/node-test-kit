@@ -11,6 +11,83 @@ const fixture = resolve(workspace, 'packages/test/test/fixtures/cucumber-consume
 const cucumberCli = resolve(workspace, 'node_modules/@cucumber/cucumber/bin/cucumber.js');
 
 describe('native cucumber-js consumer', () => {
+  it('writes a non-empty default HTML report relative to the consumer directory', async () => {
+    const reportPath = 'artifacts/index.html';
+    const api = await startApiServer();
+    await removeReport(reportPath);
+    try {
+      const result = await runCucumber(['--name', 'submit nested order'], {
+        XQ_TEST_BASE_URL: api.baseUrl
+      });
+      expect(result.status, `${result.stderr}\n${result.stdout}`).toBe(0);
+      const report = await readReport(reportPath);
+      expect(report).toContain('Cucumber consumer');
+      expect(report).toContain('submit nested order');
+      expect(report).toContain('PASSED');
+    } finally {
+      await api.close();
+      await removeReport(reportPath);
+    }
+  });
+
+  it('writes a non-empty HTML report at a custom relative reportPath', async () => {
+    const reportPath = 'reports/custom-cucumber.html';
+    const api = await startApiServer();
+    await removeReport(reportPath);
+    try {
+      const result = await runCucumber(['--name', 'submit nested order'], {
+        XQ_TEST_BASE_URL: api.baseUrl,
+        XQ_CUCUMBER_REPORT_PATH: reportPath
+      });
+      expect(result.status, `${result.stderr}\n${result.stdout}`).toBe(0);
+      const report = await readReport(reportPath);
+      expect(report).toContain('Cucumber consumer');
+      expect(report).toContain('submit nested order');
+      expect(report).toContain('PASSED');
+    } finally {
+      await api.close();
+      await removeReport(reportPath);
+    }
+  });
+
+  it('uses the default HTML report when reportPath is blank', async () => {
+    const reportPath = 'artifacts/index.html';
+    const api = await startApiServer();
+    await removeReport(reportPath);
+    try {
+      const result = await runCucumber(['--name', 'submit nested order'], {
+        XQ_TEST_BASE_URL: api.baseUrl,
+        XQ_CUCUMBER_REPORT_PATH: '   '
+      });
+      expect(result.status, `${result.stderr}\n${result.stdout}`).toBe(0);
+      const report = await readReport(reportPath);
+      expect(report).toContain('Cucumber consumer');
+      expect(report).toContain('submit nested order');
+      expect(report).toContain('PASSED');
+    } finally {
+      await api.close();
+      await removeReport(reportPath);
+    }
+  });
+
+  it('writes a failed scenario report while preserving the non-zero exit status', async () => {
+    const reportPath = 'reports/failed-cucumber.html';
+    await removeReport(reportPath);
+    try {
+      const result = await runCucumber(['--tags', '@before-failure'], {
+        XQ_TEST_BASE_URL: 'http://127.0.0.1:4000',
+        XQ_CUCUMBER_REPORT_PATH: reportPath
+      });
+      expect(result.status).not.toBe(0);
+      const report = await readReport(reportPath);
+      expect(report).toContain('Cucumber consumer');
+      expect(report).toContain('before hook failure remains failed');
+      expect(report).toContain('FAILED');
+    } finally {
+      await removeReport(reportPath);
+    }
+  });
+
   it('keeps Cucumber selection and exit status while emitting redacted lifecycle events', async () => {
     const directory = await mkdtemp(resolve(tmpdir(), 'xq-cucumber-events-'));
     const eventFile = resolve(directory, 'events.ndjson');
@@ -150,7 +227,7 @@ async function startApiServer(): Promise<{
   const namespaces: string[] = [];
   let orderRequests = 0;
   const server = createServer((request, response) => {
-    const namespace = request.headers['x-xq-test-namespace'];
+    const namespace = request.headers['x-node-test-kit-namespace'];
     if (typeof namespace === 'string') namespaces.push(namespace);
     response.writeHead(200, { 'content-type': 'application/json' });
     if (request.url === '/orders/123') {
@@ -174,6 +251,17 @@ async function startApiServer(): Promise<{
       server.close((error) => error ? rejectClose(error) : resolveClose());
     })
   };
+}
+
+async function readReport(reportPath: string): Promise<string> {
+  const absolutePath = resolve(fixture, reportPath);
+  const report = await readFile(absolutePath, 'utf8');
+  expect(report.length).toBeGreaterThan(0);
+  return report;
+}
+
+async function removeReport(reportPath: string): Promise<void> {
+  await rm(resolve(fixture, reportPath), { force: true });
 }
 
 function runCucumber(args: string[], extraEnvironment: Record<string, string>): Promise<{

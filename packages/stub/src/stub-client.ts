@@ -1,9 +1,9 @@
 import pactum from 'pactum';
 import assert from 'node:assert/strict';
 import type { Interaction, InteractionDetails } from 'pactum/src/exports/mock.js';
+import { NAMESPACE_HEADER } from './pactum-server.js';
 
 const { mock } = pactum;
-const DEFAULT_NAMESPACE_HEADER = 'x-node-test-kit-namespace';
 
 export type PactumInteraction = Interaction;
 export type PactumInteractionDetails = InteractionDetails;
@@ -32,7 +32,7 @@ export class StubClient {
 
     this.baseUrl = options.baseUrl;
     this.namespace = options.namespace;
-    this.namespaceHeader = options.namespaceHeader ?? DEFAULT_NAMESPACE_HEADER;
+    this.namespaceHeader = options.namespaceHeader ?? NAMESPACE_HEADER;
     mock.useRemoteServer(this.baseUrl);
   }
 
