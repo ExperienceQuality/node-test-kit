@@ -1,6 +1,6 @@
 {
   "name": "@experiencequality/test",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publishConfig": { "registry": "https://npm.pkg.github.com" },
   "type": "module",
   "description": "A platform-owned Vitest foundation for backend functional E2E tests.",
@@ -53,9 +53,9 @@
     "node": ">=24"
   },
   "dependencies": {
-    "@experiencequality/core": "1.0.0",
-    "@experiencequality/db": "1.0.0",
-    "@experiencequality/stub": "1.0.0",
+    "@experiencequality/core": "1.0.1",
+    "@experiencequality/db": "1.0.1",
+    "@experiencequality/stub": "1.0.1",
     "pactum": "^3.9.1",
     "tsx": "^4.23.15"
   },

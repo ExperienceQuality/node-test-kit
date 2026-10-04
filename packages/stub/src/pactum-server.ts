@@ -33,6 +33,7 @@ export async function startPactumServer(options: PactumServerOptions = {}): Prom
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     const port = configuredPort === 0 ? await reservePort(host) : configuredPort;
     try {
+      if (configuredPort !== 0) await assertPortAvailable(host, port);
       await mock.setDefaults({ host, port });
       await mock.start();
       const url = `http://${host}:${port}`;
@@ -56,7 +57,28 @@ export async function startPactumServer(options: PactumServerOptions = {}): Prom
       if (configuredPort !== 0) break;
     }
   }
-  throw new Error(`node-test-kit: Pactum mock server did not start: ${lastError instanceof Error ? lastError.message : 'unknown error'}`);
+  const detail = lastError instanceof Error ? lastError.message : 'unknown error';
+  const target = configuredPort === 0 ? `${host}:auto` : `${host}:${configuredPort}`;
+  throw new Error(`node-test-kit: Pactum mock server did not start on ${target}: ${detail}`);
+}
+
+async function assertPortAvailable(host: string, port: number): Promise<void> {
+  const server = createServer();
+  try {
+    await new Promise<void>((resolve, reject) => {
+      server.once('error', reject);
+      server.listen(port, host, () => resolve());
+    });
+  } catch (error) {
+    throw new Error(
+      `configured port ${port} on ${host} is unavailable: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error }
+    );
+  } finally {
+    if (server.listening) {
+      await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+    }
+  }
 }
 
 async function reservePort(host: string): Promise<number> {

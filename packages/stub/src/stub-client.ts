@@ -1,4 +1,5 @@
 import pactum from 'pactum';
+import assert from 'node:assert/strict';
 import type { Interaction, InteractionDetails } from 'pactum/src/exports/mock.js';
 
 const { mock } = pactum;
@@ -6,6 +7,11 @@ const DEFAULT_NAMESPACE_HEADER = 'x-node-test-kit-namespace';
 
 export type PactumInteraction = Interaction;
 export type PactumInteractionDetails = InteractionDetails;
+
+export type StubRequestExpectation = Partial<Pick<
+  NonNullable<PactumInteraction['request']>,
+  'method' | 'path' | 'queryParams' | 'headers' | 'body'
+>>;
 
 export interface StubClientOptions {
   readonly baseUrl: string | null | undefined;
@@ -74,6 +80,56 @@ export class StubClient {
     if (failures.length > 0) {
       throw new AggregateError(failures, 'node-test-kit: failed to clear mock interactions');
     }
+  }
+
+  async getCallCount(id: string): Promise<number> {
+    return (await this.getInteraction(id)).callCount ?? 0;
+  }
+
+  async verifyRequest(id: string, expected: StubRequestExpectation): Promise<PactumInteractionDetails> {
+    const interaction = await this.getInteraction(id);
+    const request = interaction.request;
+    if (expected.method !== undefined) assert.equal(request.method, expected.method);
+    if (expected.path !== undefined) assert.equal(request.path, expected.path);
+    if (expected.queryParams !== undefined) assert.deepEqual(request.queryParams, expected.queryParams);
+    if (expected.body !== undefined) assert.deepEqual(request.body, expected.body);
+    if (expected.headers !== undefined) {
+      const actualHeaders = (request.headers ?? {}) as Record<string, unknown>;
+      for (const [name, value] of Object.entries(expected.headers)) {
+        const actualName = Object.keys(actualHeaders).find((key) => key.toLowerCase() === name.toLowerCase());
+        assert.ok(actualName, `missing request header ${name}`);
+        assert.deepEqual(actualHeaders[actualName], value);
+      }
+    }
+    return interaction;
+  }
+
+  async verifyCallCount(id: string, expected: number): Promise<void> {
+    assert.equal(await this.getCallCount(id), expected, `unexpected call count for interaction ${id}`);
+  }
+
+  async verifyCalled(id: string, expected = 1): Promise<void> {
+    await this.verifyCallCount(id, expected);
+  }
+
+  async verifyNotCalled(id: string): Promise<void> {
+    await this.verifyCallCount(id, 0);
+  }
+
+  async verifyNoUnexpectedInteractions(): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/api/pactum/interactions`);
+    if (!response.ok) throw new Error(`node-test-kit: unable to inspect stub interactions (${response.status})`);
+    const interactions = await response.json() as PactumInteractionDetails[];
+    const unexpected = interactions.filter((interaction) => {
+      const headers = interaction.request.headers ?? {};
+      const namespace = Object.entries(headers).find(([name]) => name.toLowerCase() === this.namespaceHeader.toLowerCase())?.[1];
+      return String(namespace) === this.namespace && !this.#owned.has(interaction.id ?? '');
+    });
+    assert.equal(unexpected.length, 0, `unexpected interactions for namespace ${this.namespace}`);
+  }
+
+  async assertNoUnexpectedInteraction(): Promise<void> {
+    await this.verifyNoUnexpectedInteractions();
   }
 
   private normalize(interaction: PactumInteraction): PactumInteraction {
