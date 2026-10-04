@@ -1,11 +1,8 @@
-import { expect } from "vitest";
-import { test } from "@experiencequality/test/vitest";
+import { expect, test } from "@experiencequality/test/vitest";
 
-test("consumer drives a dummy backend through the kit facade", async ({
+test("Given an order, when payment succeeds, then the order response and downstream call agree", async ({
   kit,
 }) => {
-  await kit.rest.get("/health").expectStatus(200)
-
   const paymentStubId = await kit.stub.addInteraction({
     request: {
       method: "POST",
@@ -18,17 +15,27 @@ test("consumer drives a dummy backend through the kit facade", async ({
     },
   });
 
-  await kit.rest
+  const response = await kit.rest
     .post("/orders")
     .withJson({ productId: "product-1" })
-    .expectJsonMatch({
-      id: "order-123",
-      productId: "product-1",
-      paymentId: "pay-123",
-      status: "created",
-    });
+    .expectStatus(201)
+    .toss();
 
-  const paymentInteraction = await kit.stub.getInteraction(paymentStubId);
-  expect(paymentInteraction.exercised).toBe(true);
-  expect(paymentInteraction.callCount).toBe(1);
+  expect(response.body).toEqual({
+    id: "order-123",
+    productId: "product-1",
+    paymentId: "pay-123",
+    status: "created",
+  });
+
+  await kit.stub.verifyRequest(paymentStubId, {
+    method: "POST",
+    path: "/payments",
+    body: { productId: "product-1" },
+    headers: {
+      "x-node-test-kit-namespace": kit.run.id,
+    },
+  });
+  await kit.stub.verifyCalled(paymentStubId);
+  await kit.stub.verifyNoUnexpectedInteractions();
 });

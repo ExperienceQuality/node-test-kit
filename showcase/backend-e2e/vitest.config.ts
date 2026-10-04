@@ -4,7 +4,7 @@ import { defineConfig } from '@experiencequality/test/vitest/config';
 export default defineConfig({
   test: { include: ['test/**/*.test.ts'] },
   databases: {
-    payments: { urlEnv: 'postgresql://test:test@127.0.0.1:5432/backend_e2e' }
+    payments: { urlEnv: 'DATABASE_URL' }
   },
   application: {
     command: 'node --experimental-strip-types src/app.ts',

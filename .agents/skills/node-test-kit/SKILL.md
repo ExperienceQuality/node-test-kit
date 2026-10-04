@@ -5,7 +5,20 @@ description: Help consumers install and use node-test-kit for Vitest backend fun
 
 # node-test-kit
 
-Use this skill when setting up `node-test-kit` in a consumer Node.js repository, writing tests with its platform-owned fixtures, or configuring its mock server and typed database clients.
+Use this skill when setting up `node-test-kit` in a consumer Node.js repository, writing tests with its platform-owned fixtures, or configuring its mock server and typed database clients. This is the repository's dedicated agent skill for kit usage.
+
+## Work in small BDD slices
+
+For feature work, start with a focused Given/When/Then scenario before editing implementation:
+
+```gherkin
+Given the consumer configures a payment stub
+When the application creates an order
+Then the response is successful
+And the payment interaction was exercised exactly once
+```
+
+Keep the test boundary consumer-facing: use the exported `test`, `expect`, and `kit` APIs. Do not reach into `packages/*/src` from a consumer test. Implement the smallest change that makes the scenario pass, then run the narrow test followed by the repository quality gates.
 
 ## Choose an installation source
 
@@ -145,3 +158,17 @@ The fixture clears interactions created by the current test during teardown. The
 - A lookup for an unknown database name fails with a not-configured error.
 - If the application cannot reach a stub, verify it forwards `x-node-test-kit-namespace` and uses `NODE_TEST_KIT_STUB_URL` when the kit starts the application.
 - Keep application startup, migrations, and test data cleanup in consumer-owned setup; the kit owns fixture and mock lifecycle only.
+
+## Repository validation commands
+
+When working in this repository, use these commands in order as appropriate:
+
+```bash
+npm test                 # unit and integration suites
+npm run check            # structure, build, and workspace checks
+npm run ci:cucumber      # Cucumber smoke run and HTML report verification
+npm run verify:packages  # packed-package fresh-consumer verification
+npm run ci:release       # full release gate, including Docker Compose E2E
+```
+
+The Cucumber report defaults to the consumer-relative `artifacts/index.html`. A blank or missing `reportPath` uses that fallback. A custom path must remain relative to the consumer workspace; absolute paths and `..` traversal are invalid. CI packages this report as an artifact and GitHub Pages publishes the latest successful `main` report.

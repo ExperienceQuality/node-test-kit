@@ -15,10 +15,11 @@ read-only token in the consumer environment, not in source control:
 //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
 ```
 
-Install the facade and its compatible peer tools at exact versions:
+Install the facade and its compatible peer tools at the versions approved for
+the release. The current workspace release is `1.0.2`:
 
 ```bash
-npm install --save-dev @experiencequality/test@1.0.0 @cucumber/cucumber@13.2.1 vitest@4.1.11
+npm install --save-dev @experiencequality/test@1.0.2 @cucumber/cucumber@13.2.1 vitest@4.1.11
 ```
 
 Consumers normally import only `@experiencequality/test`. The `@experiencequality/core`, `@experiencequality/db`,
@@ -36,6 +37,32 @@ export default defineCucumberConfig({
   steps: 'features/steps/**/*.ts'
 });
 ```
+
+`defineCucumberConfig` is the supported helper-level enforcement boundary for
+the report contract. It always enables Cucumber's `progress` console output
+and a static HTML report. With no `reportPath`, or with a blank value, the
+report is written relative to the consumer working directory at
+`artifacts/index.html`:
+
+```js
+export default defineCucumberConfig({
+  steps: 'features/steps/**/*.ts',
+  reportPath: 'reports/cucumber.html'
+});
+```
+
+`reportPath` is optional and must remain a consumer-relative path. Absolute
+paths and traversal outside the consumer workspace are rejected. Projects
+that build Cucumber configuration directly, bypass the helper, or invoke
+Cucumber with a different formatter do not receive this enforcement.
+
+In CI, the test workflow uploads the default `artifacts/index.html` as the
+`cucumber-report` artifact even when the test job fails; the artifact is kept
+for seven days for diagnosis. A failed run therefore still has its generated
+report available, but it does not replace the GitHub Pages site. Pages listens
+to Test runs on `main` and publishes only the latest successful `main` report
+as the site-root `index.html`. Pull-request, tag, and failed runs do not
+replace the last successful Pages deployment.
 
 Run standard Cucumber commands from the IDE, CI, or shell:
 

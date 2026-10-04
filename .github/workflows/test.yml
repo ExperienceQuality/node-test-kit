@@ -24,9 +24,11 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           ref: ${{ inputs.ref || github.ref }}
       - uses: actions/setup-node@v4
         with:
@@ -35,3 +37,13 @@ jobs:
       - run: npm ci
       - run: npm run ci:build
       - run: npm test
+      - name: Run Cucumber report verification
+        run: node scripts/verify-cucumber-report.mjs
+      - name: Upload Cucumber report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucumber-report
+          path: artifacts/index.html
+          if-no-files-found: error
+          retention-days: 7

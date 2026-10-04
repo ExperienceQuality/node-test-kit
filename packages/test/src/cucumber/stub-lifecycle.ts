@@ -1,4 +1,4 @@
-import { StubClient, startPactumServer, type PactumServer } from '@experiencequality/stub';
+import { NAMESPACE_HEADER, StubClient, startPactumServer, type PactumServer } from '@experiencequality/stub';
 
 const STUB_URL_ENV = 'XQ_TEST_STUB_URL';
 const STUB_ENABLED_ENV = 'XQ_TEST_STUB_ENABLED';
@@ -24,7 +24,7 @@ export async function startCucumberStub(force = false): Promise<CucumberStubRunt
   try {
     if (externalUrl) {
       const url = validateUrl(externalUrl);
-      runtime = { url, namespaceHeader: 'x-node-test-kit-namespace' };
+      runtime = { url, namespaceHeader: NAMESPACE_HEADER };
     } else {
       const port = readPort();
       const server = await startPactumServer(port === undefined ? {} : { port });

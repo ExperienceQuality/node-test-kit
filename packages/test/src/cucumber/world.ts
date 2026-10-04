@@ -1,11 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { World, type IWorldOptions } from '@cucumber/cucumber';
 import { createRestClient, type RestClient } from '@experiencequality/rest-client';
-import { StubClient } from '@experiencequality/stub';
+import { NAMESPACE_HEADER, StubClient } from '@experiencequality/stub';
 import type { ScenarioRunContext, XqScenarioConfig } from './types.js';
 import { createCucumberStubClient, getCucumberStubRuntime, startCucumberStub } from './stub-lifecycle.js';
-
-const NAMESPACE_HEADER = 'x-xq-test-namespace';
 
 export class XqWorld extends World {
   readonly run: ScenarioRunContext = Object.freeze({

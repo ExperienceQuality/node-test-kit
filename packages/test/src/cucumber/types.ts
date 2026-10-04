@@ -18,6 +18,8 @@ export interface ScenarioRunContext {
 export interface CucumberProjectConfig {
   readonly steps: string | readonly string[];
   readonly paths?: string | readonly string[];
+  /** HTML report path relative to the consumer's working directory. */
+  readonly reportPath?: string;
 }
 
 export interface XqScenarioFramework {

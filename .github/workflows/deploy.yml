@@ -22,6 +22,7 @@ concurrency:
 jobs:
   route:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       ref: ${{ steps.route.outputs.ref }}
       version: ${{ steps.route.outputs.version }}
@@ -54,8 +55,46 @@ jobs:
     with:
       ref: ${{ needs.route.outputs.ref }}
 
-  publish:
+  release-gate:
     needs: [route, build, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.route.outputs.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Verify routed release version
+        env:
+          RELEASE_VERSION: ${{ needs.route.outputs.version }}
+          RELEASE_TAG: ${{ needs.route.outputs.ref }}
+        run: node scripts/verify-release-version.mjs --version "$RELEASE_VERSION" --tag "$RELEASE_TAG"
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Run complete release validation
+        run: npm run ci:release
+
+      - name: Upload Cucumber release report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucumber-release-report-${{ needs.route.outputs.ref }}
+          path: artifacts/index.html
+          if-no-files-found: ignore
+          retention-days: 14
+
+  publish:
+    needs: [route, build, test, release-gate]
     uses: ./.github/workflows/publish.yml
     with:
       ref: ${{ needs.route.outputs.ref }}
@@ -64,8 +103,9 @@ jobs:
       packages: write
 
   release:
-    needs: [route, build, test, publish]
+    needs: [route, build, test, release-gate, publish]
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write
     steps:

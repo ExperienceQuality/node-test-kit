@@ -15,6 +15,14 @@ const packageNames = [
   '@experiencequality/core',
   '@experiencequality/test'
 ];
+const documentedTestSubpaths = [
+  './vitest/config',
+  './cucumber',
+  './cucumber/config',
+  './cucumber/plugin',
+  './cucumber/json',
+  './package.json'
+];
 const consumer = await mkdtemp(join(tmpdir(), 'xq-test-consumer-'));
 const npmCache = resolve(consumer, '.npm-cache');
 
@@ -64,6 +72,8 @@ export default defineConfig({
 import type { Kysely } from '@experiencequality/db';
 import { expect, test } from '@experiencequality/test/vitest';
 import { defineConfig } from '@experiencequality/test/vitest/config';
+import { CUCUMBER_REPORT_PATH } from '@experiencequality/test/cucumber';
+import { defineCucumberConfig } from '@experiencequality/test/cucumber/config';
 
 interface OrdersDatabase {
   orders: { id: number; status: string };
@@ -73,6 +83,13 @@ test('loads every public package entrypoint from packed archives', ({ kit }) => 
   expect(root.test).toBe(test);
   expect(root.expect).toBe(expect);
   expect(root.defineConfig).toBe(defineConfig);
+  expect(CUCUMBER_REPORT_PATH).toBe('artifacts/index.html');
+  expect(defineCucumberConfig({ steps: 'features/steps/**/*.ts' }).format)
+    .toEqual(['progress', ['html', CUCUMBER_REPORT_PATH]]);
+  expect(defineCucumberConfig({
+    steps: 'features/steps/**/*.ts',
+    reportPath: 'reports/custom-cucumber.html'
+  }).format).toEqual(['progress', ['html', 'reports/custom-cucumber.html']]);
   expect(kit.api).toBeDefined();
   const orders = kit.db.get<OrdersDatabase>('orders');
   expect(orders.selectFrom('orders').select('status').compile().sql)
@@ -81,9 +98,13 @@ test('loads every public package entrypoint from packed archives', ({ kit }) => 
 });
 `);
   await mkdir(join(consumer, 'features/steps'), { recursive: true });
-  await writeFile(join(consumer, 'cucumber.mjs'), `import { defineCucumberConfig } from '@experiencequality/test/cucumber/config';
+  await writeFile(join(consumer, 'cucumber.mjs'), `import { CUCUMBER_REPORT_PATH } from '@experiencequality/test/cucumber';
+import { defineCucumberConfig } from '@experiencequality/test/cucumber/config';
 
-export default defineCucumberConfig({ steps: 'features/steps/**/*.ts' });
+export default defineCucumberConfig({
+  steps: 'features/steps/**/*.ts',
+  reportPath: process.env.XQ_CUCUMBER_REPORT_PATH ?? CUCUMBER_REPORT_PATH
+});
 `);
   await writeFile(join(consumer, 'features/order.feature'), `Feature: Packed Cucumber consumer
 
@@ -177,6 +198,22 @@ Then('response JSON at {string} contains:', async function (this: ResponseWorld,
   assert.deepEqual(events.map((event) => event.event), ['scenario.started', 'scenario.finished']);
   assert.equal(events[0].name, 'compose nested JSON');
   assert.equal(events[1].status, 'PASSED');
+  await assertHtmlReport(join(consumer, 'artifacts/index.html'), 'default packed Cucumber report');
+
+  const customReport = join(consumer, 'reports', 'custom-cucumber.html');
+  await runAsync(resolve(consumer, 'node_modules/.bin/cucumber-js'), ['--tags', '@smoke'], consumer, {
+    XQ_TEST_BASE_URL: 'http://127.0.0.1:4000',
+    XQ_CUCUMBER_REPORT_PATH: 'reports/custom-cucumber.html'
+  });
+  await assertHtmlReport(customReport, 'custom packed Cucumber report');
+
+  for (const subpath of documentedTestSubpaths) {
+    const specifier = `@experiencequality/test${subpath.slice(1)}`;
+    const importExpression = subpath === './package.json'
+      ? `const packageJson = (await import(${JSON.stringify(specifier)}, { with: { type: 'json' } })).default; if (packageJson.name !== '@experiencequality/test') throw new Error('unexpected packed package metadata')`
+      : `await import(${JSON.stringify(specifier)})`;
+    run(process.execPath, ['--input-type=module', '-e', importExpression], consumer);
+  }
 
   let orderRequests = 0;
   const api = createServer((_request, response) => {
@@ -245,4 +282,15 @@ function runAsync(command, args, cwd, extraEnvironment = {}) {
       }
     });
   });
+}
+
+async function assertHtmlReport(path, label) {
+  let report;
+  try {
+    report = await readFile(path, 'utf8');
+  } catch (error) {
+    throw new Error(`${label} is missing at ${path}`, { cause: error });
+  }
+  assert(report.trim().length > 0, `${label} must be non-empty`);
+  assert(/<html[\s>]/i.test(report), `${label} must contain an HTML document`);
 }

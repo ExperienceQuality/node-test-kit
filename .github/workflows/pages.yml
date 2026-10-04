@@ -1,0 +1,94 @@
+name: Cucumber report Pages
+
+on:
+  workflow_run:
+    workflows: [Test]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+
+concurrency:
+  group: pages-cucumber-report
+  cancel-in-progress: false
+
+jobs:
+  resolve-report-run:
+    name: Resolve report run
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+    outputs:
+      run-id: ${{ steps.run.outputs.run-id }}
+      deploy: ${{ steps.run.outputs.deploy }}
+    steps:
+      - name: Select the triggering or latest successful main run
+        id: run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          TRIGGER_RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          if [[ "$EVENT_NAME" == "workflow_run" ]]; then
+            echo "run-id=$TRIGGER_RUN_ID" >> "$GITHUB_OUTPUT"
+            if [[ "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
+              echo "deploy=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "deploy=false" >> "$GITHUB_OUTPUT"
+            fi
+            exit 0
+          fi
+
+          run_id=$(gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/test.yml/runs" \
+            -f branch=main \
+            -f status=success \
+            -f per_page=1 \
+            --jq '.workflow_runs[0].id // empty')
+
+          if [[ -z "$run_id" ]]; then
+            echo 'No successful Test workflow run exists on main.' >&2
+            exit 1
+          fi
+
+          echo "run-id=$run_id" >> "$GITHUB_OUTPUT"
+          echo "deploy=true" >> "$GITHUB_OUTPUT"
+
+  report:
+    name: Prepare Pages artifact
+    needs: resolve-report-run
+    if: ${{ needs.resolve-report-run.result == 'success' && needs.resolve-report-run.outputs.deploy == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+    steps:
+      - name: Download the Cucumber report artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: cucumber-report
+          path: report
+          run-id: ${{ needs.resolve-report-run.outputs.run-id }}
+          github-token: ${{ github.token }}
+
+      - name: Publish report as the Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: report
+
+  deploy:
+    name: Deploy Pages
+    needs: [resolve-report-run, report]
+    if: ${{ needs.resolve-report-run.outputs.deploy == 'true' && needs.report.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
