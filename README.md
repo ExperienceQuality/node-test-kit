@@ -61,7 +61,7 @@ only from successful Test runs on `main` and publishes the latest report as
 `index.html` at the site root. Failed runs keep their artifact for diagnosis
 but do not replace the last successful Pages report.
 
-The current publishable package release is `1.0.2`. The five internal
+The current publishable package release is `1.0.3`. The five internal
 `@experiencequality/*` packages are released together at one exact
 `MAJOR.MINOR.PATCH` version from the private workspace and published to the
 company GitHub Packages npm registry; the root workspace and showcase are not
