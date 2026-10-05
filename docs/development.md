@@ -31,7 +31,7 @@ The internal release packages are:
 - `@experiencequality/test`
 
 The root workspace and showcase remain private. The five publishable packages
-currently use version `1.0.2`; release all five internal packages at the same
+currently use version `1.0.3`; release all five internal packages at the same
 `MAJOR.MINOR.PATCH` version, and keep their internal dependency versions exact
 and aligned. Packages are published to the company GitHub Packages npm
 registry, not the public npm registry. The release workflow uses the

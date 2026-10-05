@@ -1,6 +1,6 @@
 {
   "name": "@experiencequality/core",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "publishConfig": { "registry": "https://npm.pkg.github.com" },
   "type": "module",
   "exports": {
@@ -18,8 +18,8 @@
     "node": ">=24"
   },
   "dependencies": {
-    "@experiencequality/rest-client": "1.0.2",
-    "@experiencequality/stub": "1.0.2"
+    "@experiencequality/rest-client": "1.0.3",
+    "@experiencequality/stub": "1.0.3"
   },
   "files": [
     "dist",
