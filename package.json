@@ -3,6 +3,7 @@
   "version": "1.0.3",
   "private": true,
   "type": "module",
+  "packageManager": "npm@11.19.0",
   "description": "A platform-owned Vitest foundation for backend functional E2E tests.",
   "workspaces": [
     "packages/*",
@@ -30,7 +31,6 @@
   "devDependencies": {
     "@types/node": "^24.0.0",
     "@cucumber/cucumber": "^13.2.1",
-    "tsx": "^4.23.15",
     "typescript": "^5.9.0",
     "vitest": "^4.0.0"
   }
