@@ -98,6 +98,7 @@ jobs:
     uses: ./.github/workflows/publish.yml
     with:
       ref: ${{ needs.route.outputs.ref }}
+      release_version: ${{ needs.route.outputs.version }}
     permissions:
       contents: read
       packages: write

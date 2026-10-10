@@ -66,7 +66,7 @@ jobs:
       - name: Download the Cucumber report artifact
         uses: actions/download-artifact@v5
         with:
-          name: cucumber-report
+          name: cucumber-report-node-24
           path: report
           run-id: ${{ needs.resolve-report-run.outputs.run-id }}
           github-token: ${{ github.token }}
