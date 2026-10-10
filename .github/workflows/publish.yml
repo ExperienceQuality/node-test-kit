@@ -7,6 +7,9 @@ on:
       ref:
         required: true
         type: string
+      release_version:
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -38,12 +41,8 @@ jobs:
       - name: Build release packages
         run: npm run build
 
-      - name: Publish company packages
+      - name: Publish missing company packages
         env:
           NODE_AUTH_TOKEN: ${{ github.token }}
-        run: |
-          npm publish --workspace @experiencequality/rest-client
-          npm publish --workspace @experiencequality/db
-          npm publish --workspace @experiencequality/stub
-          npm publish --workspace @experiencequality/core
-          npm publish --workspace @experiencequality/test
+          RELEASE_VERSION: ${{ inputs.release_version }}
+        run: node scripts/publish-packages.mjs
