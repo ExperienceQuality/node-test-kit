@@ -52,9 +52,30 @@ This guarantee applies at the helper boundary only; a hand-written
 `cucumber-js` configuration or direct CLI formatter selection is outside the
 platform's enforcement boundary.
 
-The Test workflow uploads `artifacts/index.html` as the `cucumber-report`
-artifact with `if: always()` and seven-day retention, so a failed run remains
-diagnosable through its downloadable artifact. The GitHub Pages workflow is
-main-only: it publishes the latest successful Test report from `main` as the
-site-root `index.html`. Failed, pull-request, and release-tag runs do not
-replace the last successful Pages deployment.
+The Test workflow runs on Node.js 24 and 26 and uploads the Node 24
+`artifacts/index.html` report as the `cucumber-report-node-24` artifact with
+`if: always()` and seven-day retention. Node 26 provides compatibility
+coverage; Node 24 is the canonical report selected by Pages. A failed run
+remains diagnosable through its downloadable artifact. The GitHub Pages
+workflow is main-only: it publishes the latest successful Test report from
+`main` as the site-root `index.html`. Failed, pull-request, and release-tag
+runs do not replace the last successful Pages deployment.
+
+### GitHub Pages setup
+
+The Pages workflow requires a one-time repository setting that cannot be
+enabled by workflow YAML. In the repository settings, open **Pages**, choose
+**GitHub Actions** as the build and deployment source, and ensure the
+`github-pages` environment exists with its deployment protection rules set as
+intended. The workflow grants `pages: write` and `id-token: write` only to its
+deployment job. If this setting is missing, `actions/deploy-pages` fails with a
+404 even when the report artifact was prepared successfully.
+
+### Idempotent package publication
+
+The release workflow verifies that all five package manifests and internal
+dependency ranges match the routed tag version before publication. Its publish
+step checks each exact package/version in dependency order, skips versions
+already present in GitHub Packages, and publishes only missing versions. A
+local version mismatch or an npm registry/authentication error fails the
+release; it is never treated as a missing package.
