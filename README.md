@@ -13,6 +13,7 @@ focused documents:
 | Node Cucumber consumer guide | [docs/consumer-guide.md](docs/consumer-guide.md) |
 | TypeScript development and release checks | [docs/development.md](docs/development.md) |
 | Node test package internals | [packages/test/README.md](packages/test/README.md) |
+| Release and repository policy | [docs/release-policy.md](docs/release-policy.md) |
 
 ## Quick start
 
